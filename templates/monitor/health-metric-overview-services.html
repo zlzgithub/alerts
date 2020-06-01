@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load custom_filter %}
+{% block content %}
+    <script src="/static/plugins/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
+    <link rel="stylesheet"
+          href="/static/plugins/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css">
+    <style>
+        .bootstrap-switch .bootstrap-switch-handle-off, .bootstrap-switch .bootstrap-switch-handle-on, .bootstrap-switch .bootstrap-switch-label {
+            padding: 5px;
+        }
+    </style>
+
+    <script>
+        window.onload = init;
+        function init() {
+            showhide(1);
+            Cookies.set("system_id", -1);
+            Cookies.set("service_id", -1);
+            Cookies.set("health_home", "health2_metric");
+        }
+
+        function showhide(n) {
+            let box = document.getElementById("monitor");
+            box.className = "active";
+            let box2 = document.getElementById("health2_metric");
+            box2.className = "active";
+        }
+    </script>
+
+    <div class="content-wrapper">
+        <section class="content-header">
+            <div><span>
+                <a href="{% url 'metric_overview_services' %}"><i class="fa fa-home fa-2x"></i></a>
+                &nbsp;&nbsp;<b style="color: #337AB7">所有分组</b>
+                <span style="color: grey;">&nbsp;&nbsp;&nbsp;&nbsp;时间: [{{ cur_time_rng|join:", " }})</span>
+            </span></div>
+        </section>
+
+        <hr class="h-divider">
+        <div class="switch switch-mini" style="margin: 15px 0 -5px 40px">
+            <input name="bsw-status" type="checkbox" checked>
+        </div>
+
+        <section class="content" id="section-cards-view" style="display: none;">
+            <div class="box-body">
+                {% for svc in sorted_allsvc %}
+                    <div class="col-lg-3 col-md-6">
+                    {% for k,v in allsvc_data.items %}
+                        {% if k == svc.name %}
+                            {% if v.total_problems == 0 %}
+                                <div class="panel panel-primary not_arrow_box">
+                            {% else %}
+                                <div class="panel panel-primary arrow_box_red">
+                            {% endif %}
+
+                        <div class="panel-heading">
+                            <div class="row">
+                                {% if v.total_problems > 0 %}
+                                    <div class="col-xs-3">
+                                        <i class="fa fa-sitemap fa-3x"
+                                           aria-hidden="true"></i>
+                                    </div>
+                                    <div class="col-xs-9 text-right">
+                                        {% if svc.desc %}
+                                            <div class="panel-title"
+                                                 title="{{ svc.name }} - {{ svc.desc }}">{{ svc.desc }}</div>
+                                        {% else %}
+                                            <div class="panel-title"
+                                                 title="{{ svc.name }} - {{ svc.desc }}">{{ svc.name }}</div>
+                                        {% endif %}
+                                        <div class="problem pull-left">
+                                            <span class="huge">{{ v.caution_problems }}</span>
+                                            <span style="color: #c1b690">个重要问题</span>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="col-xs-3">
+                                        <i class="fa fa-sitemap fa-3x"
+                                           style="color: #afafaf"
+                                           aria-hidden="true"></i>
+                                    </div>
+                                    <div class="col-xs-9 text-right">
+                                        <div class="panel-title"
+                                             style="color: #afafaf"
+                                             title="{{ svc.name }} - {{ svc.desc }}">{{ svc.name }}</div>
+                                        <div class="problem pull-left">
+                                            <span class="huge2">{{ v.caution_problems }}</span>
+                                            <span style="color: #afafaf">个问题</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                        </div>
+
+                        <a href="{% url "metric_service_index_hosts" svc.id %}">
+                            <div class="my-panel-footer-total">
+                                例<span>{{ v.total_instances }}&nbsp;</span>
+                                项<span>{{ v.total_items }}&nbsp;</span><br>
+                                {% if v.p3 > 0 %}
+                                    <span class="fa fa-bell"
+                                          aria-hidden="true"
+                                          style="color: red"
+                                          data-toggle="tooltip"
+                                          data-placement="right"
+                                          title="严重"></span>
+                                {% elif v.p2 > 0 %}
+                                    <span class="fa fa-bell"
+                                          aria-hidden="true"
+                                          style="color: darkorange"
+                                          data-toggle="tooltip"
+                                          data-placement="right"
+                                          title="中等"></span>
+                                {% elif v.p1 > 0 %}
+                                    <span class="fa fa-bell"
+                                          aria-hidden="true"
+                                          style="color: #ffcc00"
+                                          data-toggle="tooltip"
+                                          data-placement="right"
+                                          title="一般"></span>
+                                {% else %}
+                                    <span class="fa fa-bell"
+                                          aria-hidden="true"
+                                          style="color: #75d753"
+                                          data-toggle="tooltip"
+                                          data-placement="right"
+                                          title="正常"></span>
+                                {% endif %}
+                                总<span>{{ v.total_problems }}&nbsp;</span>
+                                高{% if v.p3 == 0 %}
+                                <span style="color: grey">{{ v.p3 }}&nbsp;</span>
+                            {% else %}
+                                <span style="color: red">{{ v.p3 }}&nbsp;</span>
+                            {% endif %}
+                                中{% if v.p2 == 0 %}
+                                <span style="color: grey">{{ v.p2 }}&nbsp;</span>
+                            {% else %}
+                                <span style="color: darkorange">{{ v.p2 }}&nbsp;</span>
+                            {% endif %}
+                                低{% if v.p1 == 0 %}
+                                <span style="color: grey">{{ v.p1 }}&nbsp;</span>
+                            {% else %}
+                                <span style="color: #ffcc00">{{ v.p1 }}&nbsp;</span>
+                            {% endif %}
+                            </div>
+
+                            {% for met_n, met_v in v.metric_problems.items|sort %}
+                                <div class="panel-footer">
+                                    {% if met_v.p3 > 0 %}
+                                        <span class="fa fa-circle"
+                                              aria-hidden="true"
+                                              style="color: red"
+                                              data-toggle="tooltip"
+                                              data-placement="right"
+                                              title="严重"></span>
+                                    {% elif met_v.p2 > 0 %}
+                                        <span class="fa fa-circle"
+                                              aria-hidden="true"
+                                              style="color: darkorange"
+                                              data-toggle="tooltip"
+                                              data-placement="right"
+                                              title="中等"></span>
+                                    {% elif met_v.p1 > 0 %}
+                                        <span class="fa fa-circle"
+                                              aria-hidden="true"
+                                              style="color: #ffcc00"
+                                              data-toggle="tooltip"
+                                              data-placement="right"
+                                              title="一般"></span>
+                                    {% else %}
+                                        <span class="fa fa-circle"
+                                              aria-hidden="true"
+                                              style="color: #75d753"
+                                              data-toggle="tooltip"
+                                              data-placement="right"
+                                              title="正常"></span>
+                                    {% endif %}
+                                    {{ met_n }}:
+                                    {% if met_v.p3 == 0 %}
+                                        <span style="color: grey">{{ met_v.p3 }}&nbsp;</span>
+                                    {% else %}
+                                        <span style="color: red">{{ met_v.p3 }}&nbsp;</span>
+                                    {% endif %} /
+                                    {% if met_v.p2 == 0 %}
+                                        <span style="color: grey">{{ met_v.p2 }}&nbsp;</span>
+                                    {% else %}
+                                        <span style="color: darkorange">{{ met_v.p2 }}&nbsp;</span>
+                                    {% endif %} /
+                                    {% if met_v.p1 == 0 %}
+                                        <span style="color: grey">{{ met_v.p1 }}&nbsp;</span>
+                                    {% else %}
+                                        <span style="color: #ffcc00">{{ met_v.p1 }}&nbsp;</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </a>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                </div>
+        </section>
+    </div>
+
+    <script src="/static/js/show-cards2.js"></script>
+    {% if sorted_allsvc|length <= 8 %}
+        <script>show_all_cards(0);</script>
+    {% else %}
+        <script>show_all_cards(1);</script>
+    {% endif %}
+{% endblock %}

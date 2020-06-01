@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load custom_filter %}
+{% block content %}
+
+    <style>
+        .cmn-toggle {
+            position: absolute;
+            margin-left: -9999px;
+            visibility: hidden;
+        }
+
+        .cmn-toggle + label {
+            display: block;
+            position: relative;
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+        }
+
+        input.cmn-toggle-round-flat + label {
+            padding: 1px;
+            width: 32px;
+            height: 15px;
+            background-color: #dddddd;
+            border-radius: 8px;
+            transition: background 0.4s;
+        }
+
+        input.cmn-toggle-round-flat + label:before,
+        input.cmn-toggle-round-flat + label:after {
+            display: block;
+            position: absolute;
+            content: "";
+        }
+
+        input.cmn-toggle-round-flat + label:before {
+            top: 1px;
+            left: 1px;
+            bottom: 1px;
+            right: 1px;
+            background-color: #fff;
+            border-radius: 8px;
+            transition: background 0.4s;
+        }
+
+        input.cmn-toggle-round-flat + label:after {
+            top: 2px;
+            left: 2px;
+            bottom: 2px;
+            width: 13px;
+            background-color: #dddddd;
+            border-radius: 7px;
+            transition: margin 0.4s, background 0.4s;
+        }
+
+        input.cmn-toggle-round-flat:checked + label {
+            background-color: #287baf;
+        }
+
+        input.cmn-toggle-round-flat:checked + label:after {
+            margin-left: 15px;
+            background-color: #287baf;
+        }
+    </style>
+
+    <script>
+        window.onload = init;
+
+        function init() {
+            showhide();
+            Cookies.set("system_id", -1);
+            Cookies.set("service_id", -1);
+            Cookies.set("health_home", "health_metric");
+        }
+
+        function showhide() {
+            let box = document.getElementById("monitor");
+            box.className = "active";
+            let box2 = document.getElementById("health_metric");
+            box2.className = "active";
+        }
+    </script>
+
+    <div class="content-wrapper">
+        <section class="content-header">
+            <div id="plat-title" class="col-md-9"><span><a href="{% url 'metric_overview_systems' %}"><i
+                    class="fa fa-home fa-2x"></i></a>
+                &nbsp;&nbsp;<b style="color: #337AB7; font-size: 20px;">平台概况</b>
+            </div>
+
+            <!-- 开关 -->
+            <div class="switch pull-right">
+                <input id="cmn-toggle-4" class="cmn-toggle cmn-toggle-round-flat" type="checkbox">
+                <label for="cmn-toggle-4" title="auto-play (15s)"></label>
+            </div>
+
+        </section>
+
+        <hr class="h-divider">
+
+        <div class="box-header">
+            <input class="btn btn-dark daterangepicker-field"/>
+            <div id="btn-group-tags" class="btn-group">
+                <!--
+                <button id="reversed-sel-button" class="btn btn-primary" type="button"
+                        data-toggle="collapse"
+                        data-target=".multi-collapse" aria-expanded="false"
+                        aria-controls="multiCollapse-"><i class="fa fa-adjust"
+                                                          aria-hidden="true"></i>（反选）
+                </button>
+                -->
+            </div>
+        </div>
+
+        <div class="pad" style="height: 220px">
+            <div class="col-md-8">
+                <div id="alert" style="height: 220px;"></div>
+            </div>
+            <div class="col-md-4">
+                <span style="color: #ff6915;">
+                    <i class="fa fa-bell-o" aria-hidden="true"></i>
+                    最近的问题主机：
+                </span>
+
+                <div class="row"
+                     style="max-height: 180px; overflow-y: auto; margin-left: -40px;">
+                        <span id="latest5-host-names">
+                        </span>
+                    <!--滚动效果
+                    <marquee direction="up" behaviour="alternate" scrollamount="10" height="180" onmouseover="stop()" onmouseout="start()">
+                    </marquee>
+                    -->
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="box-body">
+                <hr class="h-divider" style="height: 1px; margin-bottom: 20px">
+
+                <div id="pie-charts" class="pad">
+                    <div class="col-md-4">
+                        <div id="alert3"
+                             style="height: 200px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="alert2" style="height: 200px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="alert4"
+                             style="height: 200px;"></div>
+                    </div>
+                </div>
+
+                <div id="draw-cards" class="row" style="margin-top: 245px;"></div>
+                <!-- </div> End row -->
+            </div> <!-- End box-body -->
+        </section> <!-- End Main content -->
+    </div>
+
+    <script src="/static/js/echarts.common.min.js"></script>
+    <script src="/static/plugins/daterangepicker/js/vendor.js"></script>
+    <script src="/static/plugins/daterangepicker/js/daterangepicker.js"></script>
+    <script src="/static/plugins/daterangepicker/js/main.js"></script>
+    <script src="/static/js/count-problems.js"></script>
+
+    <script>
+        let n_pos = 0;
+        let n_click = 0;
+        let aria_controls = Cookies.get("aria_controls");
+        if (typeof(aria_controls) !== "undefined") {
+            let n_butt = $('button[data-toggle="collapse"]').length;
+            for (let i = 0; i < n_butt; i++) {
+                let butt = $('button[data-toggle="collapse"]')[i];
+                if (typeof(butt) !== "undefined") {
+                    if (butt.getAttribute('aria-controls') === aria_controls) {
+                        n_pos = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        $('body').keydown(function(event) {
+            if (event.keyCode >= 37 && event.keyCode <= 40) {
+                let step0 = 0;
+                if (event.keyCode === 37 || event.keyCode === 39) {
+                    step0 = event.keyCode - 38;
+                } else if (event.keyCode === 38 || event.keyCode === 40) {
+                    step0 = event.keyCode - 39;
+                }
+                n_click += step0;
+                let n_butt = $('button[data-toggle="collapse"]').length;
+                n_pos = (n_butt + n_pos + n_click) % n_butt;
+                butt = $('button[data-toggle="collapse"]')[n_pos];
+                //let cur_aria_controls = butt.getAttribute("aria-controls");
+                //Cookies.set("aria_controls", cur_aria_controls);
+                if (typeof(butt) !== "undefined"){
+                    //$('button[data-toggle="collapse"]').style();
+                    $('button[data-toggle="collapse"]').removeAttr("style");
+                    //$("button").removeAttr("style");
+                    butt.style = "background-color: #25416F;";
+                }
+                return false;
+            }
+        });
+
+        $('body').keyup(function(event){
+            if (event.keyCode >= 37 && event.keyCode <= 40) {
+                if ($('#cmn-toggle-4').prop('checked')){
+                    //Cookies.remove("auto_play");
+                    $('#cmn-toggle-4').trigger('click');
+                    //$('#cmn-toggle-4').attr("checked", '');
+                }
+                //let step = n_click;
+                n_click = 0;
+                //let n_butt = $('button[data-toggle="collapse"]').length;
+                let butt = $('button[data-toggle="collapse"]')[n_pos];
+                if (typeof (butt) !== "undefined") {
+                    Cookies.set("aria_controls", butt.getAttribute('aria-controls'));
+                }
+                myinit();
+            }
+            //
+        });
+    </script>
+    <script>
+        $('#cmn-toggle-4').click(function(){
+            if ($(this).prop("checked")) {
+                Cookies.set("auto_play", "on");
+            } else {
+                Cookies.remove("auto_play");
+            }
+        });
+    </script>
+
+    <script>
+        $(".daterangepicker-field").daterangepicker({
+            minDate: '1971-01-01',
+            maxDate: '2038-01-01',
+            minDate: moment().subtract(20, 'years'),
+            maxDate: moment().add(20, 'years'),
+            startDate: window.Cookies.get('time-rng').split(' -- ')[0],
+            //endDate: moment(),
+            endDate: window.Cookies.get('time-rng').split(' -- ')[1],
+            firstDayOfWeek: 7,
+            showWeekNumbers: true,
+            ranges: {
+                '今天': [moment().add(8, 'hours'), moment().add(8, 'hours')],
+                //'48小时': [moment().startOf('day').add(8, 'hours'), moment().add(8, 'hours')],
+                '48小时': [moment().subtract('days', 1).add(8, 'hours'), moment().add(8, 'hours')],
+                '72小时': [moment().subtract('days', 2).add(8, 'hours'), moment().add(8, 'hours')],
+                '最近7天': [moment().subtract('days', 6).add(8, 'hours'), moment().add(8, 'hours')],
+                '最近30天': [moment().subtract('days', 29).add(8, 'hours'), moment().add(8, 'hours')],
+            },
+            forceUpdate: true
+        }, function (start, end, label) {
+            console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')');
+            var title = start.format('YYYY-MM-DD') + ' -- ' + end.format('YYYY-MM-DD');
+            $(this).val(title);
+            window.Cookies.set("time-rng", title);
+            draw_histo("{% url 'get_systems_problems_data_histo' %}");    // 条形图
+            draw_cur("{% url 'get_systems_problems_data_cur' %}");        // 当前各类问题数
+            draw_his("{% url 'get_systems_problems_data_his' %}");        // 历史各类问题数
+            latest5_host_info("{% url 'get_latest5_hosts' %}");           // 最近的问题主机
+            draw_cards("{% url 'api_get_metric_overview_systems_data' %}");  // 卡片
+            gen_tags("{% url 'get_metric_overview_page_tags' %}");        // 平台卡片及标签
+            // window.location.reload();
+        });
+    </script>
+
+    <script>
+        function myinit() {
+            draw_histo("{% url 'get_systems_problems_data_histo' %}");
+            draw_cur("{% url 'get_systems_problems_data_cur' %}");
+            draw_his("{% url 'get_systems_problems_data_his' %}");
+            gen_tags("{% url 'get_metric_overview_page_tags' %}");
+            latest5_host_info("{% url 'get_latest5_hosts' %}");
+            {% if request.user.username == 'admin' %}
+            draw_cards("{% url 'api_get_metric_overview_systems_data' %}");
+            {% endif %}
+        }
+
+        function mydraw() {
+            // 轮播
+            let auto_play = Cookies.get("auto_play");
+            if (typeof(auto_play) !== "undefined"){
+                $('.collapse:visible').hide();
+                var n_butt = $('button[data-toggle="collapse"]').length;
+                let aria_controls = Cookies.get("aria_controls");
+                if (typeof(aria_controls) === "undefined") {
+                    let butt = $('button[data-toggle="collapse"]')[0];
+                    Cookies.set("aria_controls", butt.getAttribute('aria-controls'));
+                }
+                else {
+                    for (var i = 0; i < n_butt; i++) {
+                        let butt = $('button[data-toggle="collapse"]')[i];
+                        if (butt.getAttribute('aria-controls') === Cookies.get("aria_controls")) {
+                            if (i === n_butt - 1) {
+                                butt = $('button[data-toggle="collapse"]')[0];
+                            }
+                            else {
+                                butt = $('button[data-toggle="collapse"]')[i+1];
+                            }
+                            Cookies.set("aria_controls", butt.getAttribute('aria-controls'));
+                            break;
+                        }
+                    }
+                }
+            }
+            draw_histo("{% url 'get_systems_problems_data_histo' %}");
+            draw_cur("{% url 'get_systems_problems_data_cur' %}");
+            draw_his("{% url 'get_systems_problems_data_his' %}");
+            gen_tags("{% url 'get_metric_overview_page_tags' %}");
+            latest5_host_info("{% url 'get_latest5_hosts' %}");
+            {% if request.user.username == 'admin' %}
+            draw_cards("{% url 'api_get_metric_overview_systems_data' %}");
+            {% endif %}
+        }
+
+        AlertChart.showLoading();
+        // 按钮初始状态同步检查
+        let auto_play = Cookies.get("auto_play");
+        if (auto_play === "on"){
+            $('#cmn-toggle-4').attr("checked", 'checked');
+        }
+        myinit();
+        setInterval(mydraw, 15000);
+    </script>
+
+{% endblock %}

@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load custom_filter %}
+{% block content %}
+    <link rel="stylesheet"
+          href="/static/plugins/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css">
+    <script src="/static/plugins/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
+    <style>
+        .bootstrap-switch .bootstrap-switch-handle-off, .bootstrap-switch .bootstrap-switch-handle-on, .bootstrap-switch .bootstrap-switch-label {
+            padding: 5px;
+        }
+    </style>
+
+    <script>
+        window.onload = init;
+
+        function init() {
+            showhide(1);
+            let url = "{% url 'metric_overview_systems' %}";
+            let nav = document.getElementById("nav");
+            nav.getElementsByTagName('a')[0].setAttribute("href", url);
+            nav.getElementsByTagName('a')[1].setAttribute("href", url);
+        }
+
+        function showhide(n) {
+            let box = document.getElementById("monitor");
+            box.className = "active";
+            let health_home = Cookies.get("health_home");
+            if (health_home === undefined) {
+                return null;
+            }
+            let box2 = document.getElementById(health_home);
+            box2.className = "active";
+        }
+    </script>
+
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div>
+            <span id="nav">
+                <a href="javascript:void(0);"><i class="fa fa-arrow-circle-left fa-2x"></i></a>
+                &nbsp;&nbsp;
+                <a href="javascript:void(0);">系统: {{ sys.name }}</a>&nbsp;&gt;&nbsp;主机相关实例状况
+                <span style="color: grey;">&nbsp;&nbsp;&nbsp;&nbsp;时间: [{{ cur_time_rng|join:", " }})</span>
+            </span>
+            </div>
+        </section>
+
+        <hr class="h-divider">
+
+        <!-- <div class="pad" style="margin: 10px 0 160px 10px"> -->
+        <section class="pad">
+            <div class="col-md-8" id="div-alert">
+                <div id="alert" style="margin: -14px 0 0 0; height: 200px;"></div>
+            </div>
+            <div class="col-md-4">
+                <span style="color: #ff6915;">
+                    <i class="fa fa-bell-o" aria-hidden="true"></i>
+                    最近的问题主机：
+                </span>
+                <div class="row" style="max-height: 100px; overflow-y: auto; margin-left: -40px;">
+                    <span id="latest5-host-names">
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="pad" id="p-charts">
+                <div class="col-md-4">
+                    <div id="alert3" style="height: 180px;"></div>
+                </div>
+                <div class="col-md-4">
+                    <div id="alert2" style="height: 180px;"></div>
+                </div>
+                <div class="col-md-4">
+                    <div id="alert4" style="height: 180px;"></div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="h-divider" style="margin: 0 0 10px 0">
+
+        <section id="section-cards-view" style="display: none;">
+            <div style="color: #878787;">
+                <span class="switch switch-mini" style="margin-left: 24px">
+                    <input name="bsw-status" type="checkbox" checked>
+                </span>&nbsp;&nbsp;系统: {{ sys.name }} —— 各主机相关实例问题统计
+            </div>
+
+            <div class="box-body">
+                {% if sorted_allhost %}
+                    {% for host in sorted_allhost %}
+                        <div class="col-lg-3 col-md-6">
+                        {% for k,v in allhost_metric_data.items %}
+                            {% if k == host.hostname %}
+                                <!-- <div class="panel panel-primary"> -->
+                                {% if v.total_problems == 0 %}
+                                    <div class="panel panel-primary not_arrow_box">
+                                {% else %}
+                                    <div class="panel panel-primary arrow_box_red">
+                                {% endif %}
+                                <div class="panel-heading">
+                                <div class="row" id="div-row-4-hosts">
+                                    {% if v.total_problems > 0 %}
+                                        <div class="col-xs-3">
+                                            <i class="fa fa-desktop fa-2x"
+                                               aria-hidden="true"></i>
+                                        </div>
+                                        <div class="col-xs-9 text-right">
+
+                                        <div class="panel-title"
+                                             title="{{ host.hostname }} - {{ host.ip }}">{{ host.hostname }}</div>
+                                        <div class="problem pull-left">
+                                        <span class="huge">{{ v.caution_problems }}</span>
+                                        <span style="color: #c1b690">个重要问题</span>
+                                    {% else %}
+                                        <div class="col-xs-3">
+                                            <i class="fa fa-desktop fa-2x"
+                                               style="color: #afafaf"
+                                               aria-hidden="true"></i>
+                                        </div>
+                                        <div class="col-xs-9 text-right">
+                                        <div class="panel-title" style="color: #afafaf"
+                                             title="{{ host.hostname }} - {{ host.ip }}">{{ host.hostname }}</div>
+                                        <div class="problem pull-left">
+                                        <span class="huge2">{{ v.caution_problems }}</span>
+                                        <span style="color: #afafaf">个问题</span>
+                                    {% endif %}
+                                    </div>
+                                    </div>
+                                    </div>
+                                    </div>
+                                    <a href="{% url "health_metric_index_problems" host.id %}">
+                                        <div class="my-panel-footer-total">
+                                            {% if v.p3 > 0 %}
+                                                <span class="fa fa-bell"
+                                                      aria-hidden="true"
+                                                      style="color: red"
+                                                      data-toggle="tooltip"
+                                                      data-placement="right"
+                                                      title="严重"></span>
+                                            {% elif v.p2 > 0 %}
+                                                <span class="fa fa-bell"
+                                                      aria-hidden="true"
+                                                      style="color: darkorange"
+                                                      data-toggle="tooltip"
+                                                      data-placement="right"
+                                                      title="中等"></span>
+                                            {% elif v.p1 > 0 %}
+                                                <span class="fa fa-bell"
+                                                      aria-hidden="true"
+                                                      style="color: #ffcc00"
+                                                      data-toggle="tooltip"
+                                                      data-placement="right"
+                                                      title="一般"></span>
+                                            {% else %}
+                                                <span class="fa fa-bell"
+                                                      aria-hidden="true"
+                                                      style="color: #75d753"
+                                                      data-toggle="tooltip"
+                                                      data-placement="right"
+                                                      title="正常"></span>
+                                            {% endif %}
+                                            项<span>{{ v.total_items }}&nbsp;</span>
+                                            总<span>{{ v.total_problems }}&nbsp;</span>
+                                            高{% if v.p3 == 0 %}
+                                            <span style="color: grey">{{ v.p3 }}&nbsp;</span>
+                                        {% else %}
+                                            <span style="color: red">{{ v.p3 }}&nbsp;</span>
+                                        {% endif %}
+                                            中{% if v.p2 == 0 %}
+                                            <span style="color: grey">{{ v.p2 }}&nbsp;</span>
+                                        {% else %}
+                                            <span style="color: darkorange">{{ v.p2 }}&nbsp;</span>
+                                        {% endif %}
+                                            低{% if v.p1 == 0 %}
+                                            <span style="color: grey">{{ v.p1 }}&nbsp;</span>
+                                        {% else %}
+                                            <span style="color: #ffcc00">{{ v.p1 }}&nbsp;</span>
+                                        {% endif %}
+                                        </div>
+                                        {% for met_n, met_v in v.metric_problems.items|sort %}
+                                            <div class="panel-footer">
+                                                {% if met_v.p3 > 0 %}
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: red"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="严重"></span>
+                                                {% elif met_v.p2 > 0 %}
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: darkorange"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="中等"></span>
+                                                {% elif met_v.p1 > 0 %}
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: #ffcc00"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="一般"></span>
+                                                {% else %}
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: #75d753"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="正常"></span>
+                                                {% endif %}
+                                                {{ met_n }}:
+                                                {% if met_v.p3 == 0 %}
+                                                    <span style="color: grey">{{ met_v.p3 }}&nbsp;</span>
+                                                {% else %}
+                                                    <span style="color: red">{{ met_v.p3 }}&nbsp;</span>
+                                                {% endif %} /
+                                                {% if met_v.p2 == 0 %}
+                                                    <span style="color: grey">{{ met_v.p2 }}&nbsp;</span>
+                                                {% else %}
+                                                    <span style="color: darkorange">{{ met_v.p2 }}&nbsp;</span>
+                                                {% endif %} /
+                                                {% if met_v.p1 == 0 %}
+                                                    <span style="color: grey">{{ met_v.p1 }}&nbsp;</span>
+                                                {% else %}
+                                                    <span style="color: #ffcc00">{{ met_v.p1 }}&nbsp;</span>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    {% endfor %}
+                {% endif %}
+                </div>
+                <!-- /.box-body -->
+                <!-- /.box-footer-->
+                </div>
+                <!-- Your Page Content Here -->
+        </section>
+        <!-- /.content -->
+    </div>
+
+    <script src="/static/js/echarts.common.min.js"></script>
+    <script src="/static/js/count-problems.js"></script>
+    <script>
+        function mydraw() {
+            draw_histo("{% url 'get_system_problems_data' sys.id %}");  // 条形图
+            draw_cur("{% url 'get_system_problems_data_cur' sys.id %}");  // 指标
+            draw_his("{% url 'get_system_problems_data_his' sys.id %}");  // 历史
+            gen_tags("{% url 'get_metric_hosts_pie_data' sys.id %}");   // 左饼图、顶部标签
+            latest5_host_info("{% url 'get_latest5_hosts' %}?sysid=" + {{ sys.id }});
+        }
+
+        AlertChart.showLoading();
+        mydraw();
+        setInterval(mydraw, 5000);
+    </script>
+
+    <script src="/static/js/show-cards2.js"></script>
+    {% if sorted_allhost|length <= 8 %}
+        <script>show_all_cards(0);</script>
+    {% else %}
+        <script>show_all_cards(1);</script>
+    {% endif %}
+{% endblock %}

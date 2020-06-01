@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block content %}
+    <script src="/static/plugins/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
+    <link rel="stylesheet"
+          href="/static/plugins/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css">
+    <style>
+        .bootstrap-switch .bootstrap-switch-handle-off, .bootstrap-switch .bootstrap-switch-handle-on, .bootstrap-switch .bootstrap-switch-label {
+            padding: 5px;
+        }
+    </style>
+    <script>
+        window.onload = init;
+
+        function init() {
+            showhide();
+            Cookies.set("system_id", -1);
+            Cookies.set("service_id", -1);
+            Cookies.set("health_home", "health3");
+        }
+
+        function showhide() {
+            let box = document.getElementById("monitor");
+            box.className = "active";
+            let box2 = document.getElementById("health3");
+            box2.className = "active";
+        }
+    </script>
+
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div>
+                <span>
+                    <a href="{% url 'health_overview_hosts' %}"><i class="fa fa-home fa-2x"></i></a>
+                &nbsp;&nbsp;主机概况（昨天至今 Zabbix & Prometheus 告警）
+                </span>
+            </div>
+        </section>
+
+        <hr class="h-divider">
+        <div class="switch switch-mini" style="margin: 15px 0 -5px 40px">
+            <input name="bsw-status" type="checkbox" checked>
+        </div>
+
+        <!-- Main content -->
+        <section class="content" id="section-cards-view" style="display: none">
+            <div class="box-body">
+                {% if sorted_allhost %}
+                    {% for host in sorted_allhost %}
+                        <div class="col-lg-3 col-md-6">
+                        {% for k,v in allhost_data.items %}
+                            {% if k == host.hostname %}
+
+                                <!-- <div class="panel panel-primary"> -->
+                                {% if v.total_problems == 0 %}
+                                    <div class="panel panel-primary not_arrow_box">
+                                {% else %}
+                                    <div class="panel panel-primary arrow_box_red">
+                                {% endif %}
+                                <div class="panel-heading">
+                                <div class="row" id="div-row-4-hosts">
+                                    {% if v.total_problems > 0 %}
+                                        <div class="col-xs-3">
+                                            <i class="fa fa-desktop fa-2x"
+                                               aria-hidden="true"></i>
+                                        </div>
+                                        <div class="col-xs-9 text-right">
+
+                                        <div class="panel-title"
+                                             title="{{ host.hostname }} - {{ host.ip }}">{{ host.hostname }}</div>
+
+                                        <div class="problem pull-left">
+                                        <span class="huge">{{ v.total_problems }}</span>
+                                        个问题{% if v.is_attached == 0 %}
+                                        <i class="fa fa-question-circle-o"
+                                           aria-hidden="true" style="color: yellow;"
+                                           title="未归属任何分组"></i>{% endif %}
+                                    {% else %}
+                                        <div class="col-xs-3">
+                                            <i class="fa fa-desktop fa-2x"
+                                               style="color: #afafaf"
+                                               aria-hidden="true"></i>
+                                        </div>
+                                        <div class="col-xs-9 text-right">
+                                        <div class="panel-title" style="color: #afafaf"
+                                             title="{{ host.hostname }} - {{ host.ip }}">{{ host.hostname }}</div>
+
+                                        <div class="problem pull-left">
+                                        <span class="huge2">{{ v.total_problems }}</span>
+                                        <span style="color: #afafaf">个问题
+                                            {% if v.is_attached == 0 %}
+                                                <i class="fa fa-question-circle-o"
+                                                   aria-hidden="true" style="color: yellow;"
+                                                   title="未归属任何分组"></i>{% endif %}
+                                            </span>
+                                    {% endif %}
+                                    </div>
+                                    </div>
+                                    </div>
+                                    </div>
+                                    <a href="{% url 'health_index_problems' host.id %}">
+                                        <div class="panel-footer">
+                                            <div class="se">
+                                                {% if v.high_problems > 0 %}
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: red"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="严重"></span>
+                                                    <span class="se-high">{{ v.high_problems }}</span>
+                                                    &nbsp;&nbsp;
+                                                {% else %}
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: grey"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="严重"></span>
+                                                    <span class="se-high2">{{ v.high_problems }}</span>
+                                                    &nbsp;&nbsp;
+                                                {% endif %}
+
+                                                {% if v.med_problems > 0 %}
+
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: darkorange"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="中等"></span>
+                                                    <span class="se-medium">{{ v.med_problems }}</span>
+                                                    &nbsp;&nbsp;
+                                                {% else %}
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: grey"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="中等"></span>
+                                                    <span class="se-high2">{{ v.med_problems }}</span>
+                                                    &nbsp;&nbsp;
+                                                {% endif %}
+
+                                                {% if v.low_problems > 0 %}
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: #ffcc00"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="一般"></span>
+                                                    <span class="se-low">{{ v.low_problems }}</span>
+                                                    &nbsp;&nbsp;
+                                                {% else %}
+                                                    <span class="fa fa-circle"
+                                                          aria-hidden="true"
+                                                          style="color: grey"
+                                                          data-toggle="tooltip"
+                                                          data-placement="right"
+                                                          title="一般"></span>
+                                                    <span class="se-high2">{{ v.low_problems }}</span>
+                                                    &nbsp;&nbsp;
+                                                {% endif %}
+
+                                                <span class="pull-right">问题:{{ v.total_problems }}&nbsp;<i
+                                                        class="fa fa-arrow-circle-right"></i></span>
+                                                <div class="clearfix"></div>
+                                            </div>
+                                            <!-- <span class="pull-left">查看详情</span> -->
+                                            <div class="clearfix"></div>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    {% endfor %}
+                {% endif %}
+                </div>
+        </section>
+
+    </div>
+
+    <script src="/static/js/show-cards2.js"></script>
+    {% if sorted_allhost|length <= 8 %}
+        <script>show_all_cards(0);</script>
+    {% else %}
+        <script>show_all_cards(1);</script>
+    {% endif %}
+{% endblock %}

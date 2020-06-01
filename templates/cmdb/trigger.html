@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block self_head_css_js %}
+    <script src="/static/layer/layer.js"></script>
+    <script src="/static/js/base.js"></script>
+{% endblock %}
+{% block content %}
+    <script>
+        window.onload = init;
+        function init() {
+            showhide(2);
+        }
+
+        function showhide(n) {
+            var box = document.getElementById("cmdb");
+            box.className = "active";
+            var box2 = document.getElementById("trigger");
+            box2.className = "active";
+        }
+    </script>
+
+    <div class="content-wrapper">
+        <section class="content-header">
+        <div>
+            <span>
+                <a href="{% url 'metric_overview_systems' %}">
+                    <i class="fa fa-home fa-2x"></i></a>
+                <b style="color: #337AB7">{{ plat_name }}</b> 触发器
+            </span>
+        </div>
+    </section>
+
+    <hr class="h-divider">
+    {% include 'cmdb/trigger-table.html' %}
+{% endblock %}

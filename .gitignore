@@ -1,0 +1,8 @@
+.svn/
+.idea
+alerts.conf
+.pyc
+wx.py
+*.bak
+*.ori
+*.old

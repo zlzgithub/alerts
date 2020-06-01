@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: alerts
+  namespace: test
+  labels:
+    k8s-app: alerts
+spec:
+  rules:
+  - host: alerts.keep.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: alerts
+          servicePort: http

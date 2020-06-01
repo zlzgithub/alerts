@@ -1,0 +1,14 @@
+[Unit]
+Description=alerts
+After=network.target
+
+[Service]
+WorkingDirectory=/var/opt/alerts/main
+ExecStart=/usr/bin/gunicorn -c gunicorn_conf.py alerts.wsgi
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

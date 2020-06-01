@@ -1,0 +1,17 @@
+django==1.11.20
+tornado==5.1.1
+sh==1.12.9
+mysqlclient==1.3.12
+pytest==3.0.7
+celery==4.2.1
+django-auth-ldap==1.7.0
+python-ldap==3.1.0
+django-celery-beat==1.1.1
+gunicorn==19.7.1
+redis==3.2.0
+psutil==5.2.2
+schedule==0.4.3
+pymongo==3.3.0
+requests==2.20.0
+django-db==0.0.7
+ldap3==2.5.1

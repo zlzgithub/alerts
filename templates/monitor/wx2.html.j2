@@ -1,0 +1,30 @@
+
+---
+
+  {% if data.status_code == 1 %}
+   {% if data.instance %}
+> 实例:     <font color="info">{{ data.instance }}</font>
+   {% endif %}
+> 名称:     <font color="info">{{ data.name }}</font>
+> <font color="comment">时间:     </font>start at {{ data.create_time }}
+> <font color="comment">状态:    </font>{% if data.severity == 1 %}警告{% elif data.severity == 2 %}一般{% elif data.severity == 3 %}严重{% endif %}<font color="info"> {{ data.status }}</font>
+> <font color="comment">描述:     </font>{{ data.desc }}
+> <font color="comment">类别:     </font>{{ data.met_name }}
+> <font color="comment">接收人:  </font>{{ users }} ...
+  {% else %}
+   {% if data.instance %}
+> 实例:     <font color="warning">{{ data.instance }}</font>
+   {% endif %}
+> 名称:     <font color="warning">{{ data.name }}</font>
+> <font color="comment">时间:     </font>{{ data.create_time }}
+> <font color="comment">状态:    </font> {% if data.severity == 1 %}警告{% elif data.severity == 2 %}一般{% elif data.severity == 3 %}严重{% endif %} `{{ data.status }}`
+> <font color="comment">描述:     </font>{{ data.desc }}
+> <font color="comment">类别:    </font>`{{ data.met_name }}`
+> <font color="comment">接收人:  </font>{{ users }} ...
+  {% endif %}
+
+---
+
+[查看问题](https://alerts.platform.production.yhglobal.cn/monitor/health/metric/host/{{ data.host_id }}/problems/?fr=wx){% if data.sys_id != "" %}    [所属系统连接状态](https://alerts.platform.production.yhglobal.cn/monitor/syslink/system/{{ data.sys_id }}/){% else %}{% if data.plat_id != "" %}    [所属平台连接状态](https://alerts.platform.production.yhglobal.cn/monitor/syslink/platform/{{ data.plat_id }}/){% endif %}{% endif %}
+
+

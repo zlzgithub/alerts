@@ -1,0 +1,15 @@
+ul.ztree {
+    margin-top: 0;
+    width: 239px;
+    height: 448px;
+    overflow-y: scroll;
+    overflow-x: auto;
+}
+
+iframe {
+    margin-left: 25px;
+    border-left: 1px solid #cccccc;
+    width: 236%;
+    height: 448px;
+}
+

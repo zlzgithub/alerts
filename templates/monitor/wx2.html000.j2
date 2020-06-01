@@ -1,0 +1,31 @@
+{% if data.status == "resolved" %}
+### YH Alert - <font color="info">{{ data.status }}</font>
+{% else %}
+### YH Alert `{{ data.status }}`
+{% endif %}
+
+---
+
+  {% if data.status == "resolved" %}
+   {% if data.instance %}
+> 实例:     <font color="info">{{ data.instance }}</font>
+   {% endif %}
+> 名称:     <font color="info">{{ data.name }}</font>
+> <font color="comment">时间:     </font>start at {{ data.create_time }}
+> <font color="comment">状态:     </font>{% if data.severity == "1" %}警告{% elif data.severity == "2" %}一般{% elif data.severity == "3" %}严重{% endif %}<font color="info"> {{ data.status }}</font>
+> <font color="comment">描述:     </font>{{ data.desc }}
+> <font color="comment">接收人:  </font>{{ users }} ...
+  {% else %}
+   {% if data.instance %}
+> 实例:     <font color="warning">{{ data.instance }}</font>
+   {% endif %}
+> 名称:     <font color="warning">{{ data.name }}</font>
+> <font color="comment">时间:     </font>{{ data.create_time }}
+> <font color="comment">状态:    </font> {% if data.severity == "1" %}警告{% elif data.severity == "2" %}一般{% elif data.severity == "3" %}严重{% endif %} `{{ data.status }}`
+> <font color="comment">描述:     </font>{{ data.desc }}
+> <font color="comment">接收人:  </font>{{ users }} ...
+  {% endif %}
+
+---
+
+- [查看近期问题](http://alerts.platform.production.yhglobal.cn/monitor/health/metric/host/{{ data.host_id }}/problems/?fr=wx)

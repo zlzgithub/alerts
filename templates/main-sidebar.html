@@ -1,0 +1,318 @@
+<script>
+    $(document).ready(function () {
+        $('.loading').fadeOut();
+        {% if request.user.is_superuser %}
+            $("li").each(function () {
+                if ($(this).attr('id')) {
+                    $(this).css('display', 'block');
+                }
+            });
+            $("a").each(function () {
+                if ($(this).attr('id')) {
+                    $(this).css('display', 'block');
+                }
+            });
+            $("button").each(function () {
+                if ($(this).attr('id')) {
+                    $(this).css('display', 'block');
+                }
+            });
+            $("th span").each(function () {
+                if ($(this).hasClass("perm")) {
+                    // if (this.classList.contains("perm")) {
+                    $(this).css('display', 'block');
+                }
+            });
+            $("span.perm").each(function () {
+                if ($(this).hasClass("perm")) {
+                    $(this).css('display', 'block');
+                }
+            });
+        {% else %}
+            $.get('/accounts/permission/user_permission/', function (data) {
+                if (data) {
+                    var obj = data.split(",");
+                    var x;
+                    for (x in obj) {
+                        $("a").each(function () {
+                            if ($(this).attr('id') == obj[x]) {
+                                $(this).css('display', 'block');
+                            } else {
+                                ref = $(this).attr('href');
+                                //if ($.inArray(obj[x], ref.split('/')) > -1) {
+                                //if (obj[x] == ref) {
+                                if (obj[x] !== "" && typeof (ref) !== "undefined" && ref.startsWith(obj[x])) {
+                                    if (this.style.display === 'block') {
+                                        //
+                                    } else if (this.style.display === 'none') {
+                                        $(this).css('display', 'block');
+                                    } else {
+                                        if (this.parentNode.style.display === 'none') {
+                                            $(this).parent().css('display', 'block');
+                                        }
+                                    }
+
+                                }
+                            }
+                        });
+                        $(".btn-group span").each(function () {
+                            if ($(this).hasClass("perm-" + obj[x])) {
+                                // if (this.classList.contains("perm-" + obj[x])) {
+                                $(this).css('display', 'block');
+                            }
+                        });
+                        $("th span").each(function () {
+                            if ($(this).hasClass("perm-" + obj[x])) {
+                                // if (this.classList.contains("perm-" + obj[x])) {
+                                $(this).css('display', 'block');
+                            }
+                        });
+                        $("li").each(function () {
+                            if ($(this).attr('id') == obj[x]) {
+                                $(this).css('display', 'block');
+                            }
+                        });
+                        $("button").each(function () {
+                            if ($(this).attr('id') == obj[x]) {
+                                $(this).css('display', 'block');
+                            }
+                        });
+                    }
+
+                    <!-- 排除 -->
+                    for (x in obj) {
+                        if (obj[x].startsWith('!')) {
+                            let obj_x = obj[x].replace(/^!/, '');
+                            $("a").each(function () {
+                                if ($(this).attr('id') == obj_x) {
+                                    $(this).css('display', 'none');
+                                } else {
+                                    ref = $(this).attr('href');
+                                    if (obj_x !== "" && typeof (ref) !== "undefined" && ref.startsWith(obj_x)) {
+                                        if (this.style.display === 'none') {
+                                            //
+                                        } else if (this.style.display === 'block') {
+                                            $(this).css('display', 'none');
+                                        } else {
+                                            if (this.parentNode.style.display === 'block') {
+                                                $(this).parent().css('display', 'none');
+                                            }
+                                        }
+
+                                    }
+                                }
+                            });
+                            $(".btn-group span").each(function () {
+                                if ($(this).hasClass("perm-" + obj_x)) {
+                                    // if (this.classList.contains("perm-" + obj_x)) {
+                                    $(this).css('display', 'none');
+                                }
+                            });
+                            $("th span").each(function () {
+                                if ($(this).hasClass("perm-" + obj_x)) {
+                                    // if (this.classList.contains("perm-" + obj_x)) {
+                                    $(this).css('display', 'none');
+                                }
+                            });
+                            $("li").each(function () {
+                                if ($(this).attr('id') == obj_x) {
+                                    $(this).css('display', 'none');
+                                }
+                            });
+                            $("button").each(function () {
+                                if ($(this).attr('id') == obj_x) {
+                                    $(this).css('display', 'none');
+                                }
+                            });
+                        }
+                    } <!-- 排除的权限-->
+
+                }
+            });
+        {% endif %}
+    });
+</script>
+<aside class="main-sidebar">
+
+    <!-- sidebar: style can be found in sidebar.less -->
+    <section class="sidebar">
+        <div style="height: 20px">
+
+        </div>
+        <!-- Sidebar user panel (optional) -->
+        <!-- /.search form -->
+
+        <!-- Sidebar Menu -->
+
+        <ul class="sidebar-menu" id="sidebar-menu">
+            <li id="navilist" style="display: block"><a href="{% url 'navi' %}"><i
+                    class="fa fa-link"></i> <span>站点导航</span></a></li>
+
+            <li class="treeview" id="monitor" style="display: block">
+                <a href="{% url 'system_index' %}">
+                    <i class="fa fa-bar-chart" aria-hidden="true"></i>
+                    <span style="color:#0A0">系统监控</span>
+                        <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li id="health_metric" style="display: block"><a
+                            href="{% url 'metric_overview_systems' %}"><span
+                            style="color:#22258f"><i class="fa fa-circle-o" aria-hidden="true"></i> 平台概况</span></a>
+                    </li>
+
+                    <li id="health4" style="display: block"><a
+                            href="{% url 'health_overview_problems' %}"><span style="color:#22258f"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 问题列表</span></a>
+                    </li>
+
+                    <li id="health5" style="display: block"><a
+                            href="{% url 'health_overview_notifications' %}"><span style="color:#22258f"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 通知记录</span></a>
+                    </li>
+
+                    <li id="health2_metric" style="display: none"><a
+                            href="{% url 'metric_overview_services' %}"><span style="color:#22258f"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 所有分组</span></a>
+                    </li>
+
+                    <hr>
+                    <li id="systemmonitor" style="display: none"><a href="{% url 'monitor' %}"><span
+                            style="color:#ea8d0d"><i class="fa fa-circle-o" aria-hidden="true"></i> 主机目录</span></a>
+                    </li>
+
+                    <li id="syslink" style="display: block;"><a href="{% url 'syslink' %}"><span
+                            style="color:#ea8d0d"><i class="fa fa-circle-o" aria-hidden="true"></i> 系统链路</span></a>
+                    </li>
+                    <hr>
+
+                    <!--
+                    {% if request.user.username == 'admin' %}
+                        <hr><span style="color: #bebebe;">几个旧的入口</span>
+                    <li id="health" style="display: none"><a
+                            href="{% url 'health_overview_systems' %}"><span style="color:#a8a8a8"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 概 况</span></a>
+                    </li>
+                    <li id="health2" style="display: none"><a
+                            href="{% url 'health_overview_services' %}"><span style="color:#a8a8a8"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 分 组</span></a>
+                    </li>
+                    <li id="health3" style="display: none"><a
+                            href="{% url 'health_overview_hosts' %}"><span style="color:#a8a8a8"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 主 机</span></a>
+                    </li>
+                    {% endif %}
+                    -->
+
+                </ul>
+            </li>
+
+            <li class="treeview" id="cmdb" style="display: none">
+                <a href="{% url 'cmdb' %}"><i class="fa fa-life-ring" aria-hidden="true"></i> <span>监控管理</span>
+                    <span class="pull-right-container">
+                        <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li id="asset" style="display: none"><a href="{% url 'cmdb' %}"><span
+                            style="color:#22258f"><i class="fa fa-circle-o" aria-hidden="true"></i> 主机管理</span></a>
+                    </li>
+
+                    <li id="instance" style="display: none"><a
+                            href="{% url 'instance_index' %}"><span
+                            style="color:#22258f"><i class="fa fa-circle-o" aria-hidden="true"></i> 实例管理</span></a>
+                    </li>
+
+                    <li id="idc" style="display: none"><a
+                            href="{% url 'idc' %}"><span><i class="fa fa-circle-o"
+                                                            aria-hidden="true"></i> 机房管理</span></a>
+                    </li>
+
+                    <li id="cabinet" style="display: none"><a
+                            href="{% url 'cabinet' %}"><span><i class="fa fa-circle-o"
+                                                                aria-hidden="true"></i> 机柜管理</span></a>
+                    </li>
+
+                    <li id="group" style="display: none"><a
+                            href="{% url 'group' %}"><span><i class="fa fa-circle-o"
+                                                              aria-hidden="true"></i> 属组管理</span></a>
+                    </li>
+
+                    <li id="systemgroup" style="display: none"><a
+                            href="{% url 'systemgroup' %}"><span style="color:#0A0"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 平台管理</span></a>
+                    </li>
+
+                    <li id="system" style="display: none"><a href="{% url 'system' %}"><span
+                            style="color:#0A0"><i class="fa fa-circle-o" aria-hidden="true"></i> 系统管理</span></a>
+                    </li>
+
+                    <li id="service" style="display: none"><a href="{% url 'service' %}"><span
+                            style="color:#0A0"><i class="fa fa-circle-o" aria-hidden="true"></i> 分组管理</span></a>
+                    </li>
+
+                    <li id="item" style="display: none"><a href="{% url 'item_index' %}"><span
+                            style="color:#22258f"><i class="fa fa-circle-o" aria-hidden="true"></i>&nbsp;&nbsp;监 控 项</span></a>
+                    </li>
+
+                    <li id="metric" style="display: none"><a href="{% url 'metric_index' %}"><span
+                            style="color:#22258f"><i class="fa fa-circle-o" aria-hidden="true"></i>&nbsp;&nbsp;指 标 项</span></a>
+                    </li>
+
+                    <li id="trigger" style="display: none"><a href="{% url 'trigger_index' %}"><span
+                            style="color:#22258f"><i class="fa fa-circle-o" aria-hidden="true"></i>&nbsp;&nbsp;触 发 器</span></a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="treeview" id="accounts" style="display: none">
+                <a href="{% url 'user_list' %}"><i class="fa fa-users"></i> <span>用户管理</span>
+                    <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li id="userlist" style="display: none"><a
+                            href="{% url 'user_list' %}"><span style="color:#0A0"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 用户管理</span></a>
+                    </li>
+                    <li id="rolelist" style="display: none"><a
+                            href="{% url 'role_list' %}"><span style="color:#0A0"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 角色管理</span></a>
+                    </li>
+                    <li id="permlist" style="display: none"><a
+                            href="{% url 'permission_list' %}"><span style="color:#0A0"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 权限管理</span></a>
+                    </li>
+                    <li id="rule" style="display: none"><a href="{% url 'rule_index' %}"><span
+                            style="color:#22258f"><i class="fa fa-circle-o" aria-hidden="true"></i> 通知规则</span></a>
+                    </li>
+                    <li id="rulesetlist" style="display: none"><a
+                            href="{% url 'ruleset_list' %}"><span style="color:#22258f"><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> 通知规则集</span></a>
+                    </li>
+                </ul>
+            </li>
+
+            <!--
+            <li class="treeview" id="setup" style="display: none">
+                <a href="{% url 'job_list' %}"><i class="fa fa-cogs"></i> <span>任务管理</span>
+                    <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li id="joblist" style="display: none"><a href="{% url 'job_list' %}"><span><i
+                            class="fa fa-circle-o" aria-hidden="true"></i> Crontab</span></a>
+                    </li>
+                </ul>
+            </li>
+            -->
+            <li id="config" style="display: none"><a href="{% url 'config' %}"><i
+                    class="fa fa fa-cog"></i> <span>系统配置</span></a></li>
+        </ul>
+        <!-- /.sidebar-menu -->
+    </section>
+    <!-- /.sidebar -->
+</aside>

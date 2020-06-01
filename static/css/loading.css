@@ -1,0 +1,231 @@
+.loading{
+    background:#f39c12; /*//设置进度条的颜色*/
+    height:4px; /*//设置进度条的高度*/
+    position:fixed; /*//设定进度条跟随屏幕滚动*/
+    top:0; /*//将进度条固定在页面顶部*/
+    z-index:99999  /*提高进度条的优先层级，避免被其他层遮挡*/
+}
+
+.huge {
+    margin: 0px 0px 0px 20px;
+    font-family: proxima-nova,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 28px;
+    color: #ebff3f;
+    color: #00ccff;
+}
+
+.huge2 {
+    margin: 0px 0px 0px 20px;
+    font-family: proxima-nova,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 28px;
+    color: #afafaf;
+}
+
+.panel-title {
+    //font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+    font-family: proxima-nova,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    text-overflow: ellipsis;
+    //white-space: nowrap;
+    word-break: break-all;
+    overflow: hidden;
+    margin: -10px -10px 0 -40px;
+    font-size: 16px;
+}
+
+.panel-heading {
+    margin-bottom: -15px;
+}
+
+.panel-footer {
+    max-height: 24px;
+    padding: 5px 10px;
+}
+
+.my-panel-footer-total {
+    //padding-left: 10px;
+    //padding-right: auto;
+    font: bold 14px solid;
+    text-align: center;
+    min-height: 24px;
+    max-height: 50px;
+    //padding: 10px 15px;
+    background-color: #f5f5f5;
+    border-top: 1px solid #ddd;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px
+}
+
+#div-row-4-hosts .panel-title {
+    //font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+    font-family: proxima-nova,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    text-overflow: ellipsis;
+    //white-space: nowrap;
+    word-break: break-all;
+    overflow: hidden;
+    margin: -10px -10px 0 -20px;
+    font-size: 14px;
+    height: 38px;
+}
+
+.col-xs-3 .fa-desktop {
+    margin-top: 1px;
+    margin-left: -5px;
+}
+
+.arrow_box_green{animation: glow 800ms ease-out infinite alternate; }
+@keyframes glow {
+    0% {
+        border-color: #393;
+        box-shadow: 0 0 5px rgba(0,255,0,.2), inset 0 0 5px rgba(0,255,0,.1), 0 1px 0 #393;
+    }
+    100% {
+        border-color: #6f6;
+        box-shadow: 0 0 20px rgba(0,255,0,.6), inset 0 0 10px rgba(0,255,0,.4), 0 1px 0 #6f6;
+    }
+}
+
+.arrow_box_red{animation: glow_red 800ms ease-out infinite alternate; }
+@keyframes glow_red {
+    0% {
+        opacity:.8;
+        border-color: #337AB7;
+        box-shadow: 0 0 10px rgba(51,122,183,.3), inset 0 0 10px rgba(51,122,183,.1), 0 1px 0 #337ab7;
+    }
+    100% {
+        opacity:1;
+        border-color: #ff493d;
+        box-shadow: 0 0 40px rgba(255,73,61,.9), inset 0 0 40px rgba(255,73,61,.6), 0 1px 0 #ff493d;
+    }
+}
+
+.arrow_box_red222>.panel-heading {
+    background-color: #ff5e4e;
+}
+
+.content table td {
+    /* text-align: center; */
+    text-align: left;
+    max-width: 200px;
+    // max-height: 26px;
+    padding: 3px;
+    // overflow: hidden;
+    // white-space: nowrap;
+    // text-overflow: ellipsis;
+}
+
+.se {
+    margin: -5px 0px 5px;
+}
+
+.se-high {
+    color: red;
+}
+
+.se-high2 {
+    color: grey;
+}
+
+.se-ok {
+    color: #629b30;
+}
+
+.se-ok2 {
+    color: #6bb941;
+}
+
+.se-ok3 {
+    color: #75d753;
+}
+
+.se-medium {
+    color: #ff5e03;
+}
+
+.se-low {
+    color: #ffcc00;
+}
+
+.col-sm-10 #config {
+    width: 450px;
+}
+
+.content-header div {
+    height: 40px;
+    /*background: #dbdbdb;*/
+    /*justify-content: center;*/
+    align-items: center;
+    display: -webkit-flex;
+}
+
+.content-header {
+    padding: 5px 15px 0 15px;
+}
+
+.h-divider {
+    margin-top: 2px;
+    margin-bottom: 5px;
+    height: 2px;
+    width: 100%;
+    /*border-top: 3px solid #FFF;*/
+    background: linear-gradient(to right, #065880 10%, #84b3ff 60%, #cecece 90%);
+}
+
+#pie-charts > div {
+    border: 1px solid grey;
+    border-radius: 15px;
+    border-width: 1px 1px 3px 1px;
+	//border-color: #fafafa #fafafa #dadada #dadada;
+	border-color: #fafafa #fafafa #fafafa #fafafa;
+}
+
+#p-charts > div{
+    border: 1px solid grey;
+    border-radius: 15px;
+    border-width: 1px 1px 3px 1px;
+	//border-color: #fafafa #fafafa #dadada #dadada;
+	border-color: #fafafa #fafafa #fafafa #fafafa;
+}
+
+.perm {
+    display: none;
+    float:left;
+    margin: auto;
+}
+
+/* 背景色呼吸灯效果 */
+.breath_light>.panel-heading {
+    background-color: red;
+}
+
+.breath_light {
+    width: auto;                                    /* 宽度 */
+    height: auto;                                    /* 高度 */
+    opacity: 0.05;                                   /* 不透明度 */
+    overflow: hidden;                               /* 溢出隐藏 */
+    background: #dd2f2b;                            /* 背景色 */
+    margin: auto auto;                               /* 外边距 */
+
+    /* IE10、Firefox and Opera，IE9以及更早的版本不支持 */
+    animation-name: breath;                         /* 动画名称 */
+    animation-duration: 3s;                         /* 动画时长3秒 */
+    animation-timing-function: ease-in-out;         /* 动画速度曲线：以低速开始和结束 */
+    animation-iteration-count: infinite;            /* 播放次数：无限 */
+
+    /* Safari and Chrome */
+    -webkit-animation-name: breath;                 /* 动画名称 */
+    -webkit-animation-duration: 3s;                 /* 动画时长3秒 */
+    -webkit-animation-timing-function: ease-in-out; /* 动画速度曲线：以低速开始和结束 */
+    -webkit-animation-iteration-count: infinite;    /* 播放次数：无限 */
+}
+
+@keyframes breath {
+    from { opacity: 0.1; }                          /* 动画开始时的不透明度 */
+    50%  { opacity:   1; }                          /* 动画50% 时的不透明度 */
+    to   { opacity: 0.1; }                          /* 动画结束时的不透明度 */
+}
+
+@-webkit-keyframes breath {
+    from { opacity: 0.1; }                          /* 动画开始时的不透明度 */
+    50%  { opacity:   1; }                          /* 动画50% 时的不透明度 */
+    to   { opacity: 0.1; }                          /* 动画结束时的不透明度 */
+}

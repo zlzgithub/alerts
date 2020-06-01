@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <script>
+        window.onload = init;
+
+        function init() {
+            showhide(1);
+            Cookies.set("system_id", -1);
+            Cookies.set("service_id", -1);
+            Cookies.set("health_home", "health");
+        }
+
+        function showhide(n) {
+            let box = document.getElementById("monitor");
+            box.className = "active";
+            let box2 = document.getElementById("health");
+            box2.className = "active";
+        }
+    </script>
+
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div class="col-md-8"><span><a href="{% url 'health_overview_systems' %}"><i
+                    class="fa fa-home fa-2x"></i></a>
+                &nbsp;&nbsp;系统主机概况（昨天零时至今 Zabbix & Prometheus 告警）</span>
+            </div>
+
+            <!--
+            <div class="form-group col-md-4 pull-right">
+                <div id="reportrange" class="pull-right"
+                     style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+                    <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>&nbsp;
+                    <span></span> <b class="caret"></b>
+                </div>
+            </div>
+            -->
+        </section>
+        <hr class="h-divider">
+
+        <!--
+            <div class="form-group col-md-6">
+                <label for="dtp_input1" class="col-md-1 control-label">Fr</label>
+                <div class="input-group date form_datetime" data-date="2019-09-16T05:25:07Z"
+                     data-date-format="yyyy-mm-dd HH:ii" data-link-field="dtp_input1">
+                    <input class="form-control" size="16" type="text" value="" readonly>
+                    <span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span>
+                </div>
+                <input type="hidden" id="dtp_input1" value=""/><br/>
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="dtp_input2" class="col-md-1 control-label">To</label>
+                <div class="input-group date form_datetime"
+                     data-date="2019-09-16T05:25:07Z"
+                     data-date-format="yyyy-mm-dd HH:ii" data-link-field="dtp_input2">
+                    <input class="form-control" size="16" type="text" value="" readonly>
+                    <span class="input-group-addon"><span
+                            class="glyphicon glyphicon-th"></span></span>
+                </div>
+                <input type="hidden" id="dtp_input2" value=""/><br/>
+            </div> -->
+
+        {% if allgrpdata %}
+            <div class="box-header">
+                <div class="btn-group" id="myGroup2">
+                    <input class="btn btn-dark daterangepicker-field"/>
+                    <!--
+                        <input id="daterange" class="btn btn-dark" data-bind="daterangepicker: dateRange"/>
+                        -->
+                    {% for group_name,gv in allgrpdata.items %}
+                        <button class="btn btn-primary" type="button" data-toggle="collapse"
+                                data-target="#multiCollapse-{{ gv.systemgroup.id }}"
+                                aria-expanded="false"
+                                aria-controls="multiCollapse-{{ gv.systemgroup.id }}">
+                            {% for k, v in allsysdata.grp_info.items %}
+                                {% if k == group_name %}
+                                    {% if v.problems == 0 %}
+                                        {{ group_name }}
+                                    {% else %}
+                                        {{ group_name }}
+                                        <span style="color: #f8ff62">({{ v.problems }})</span>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </button>
+                    {% endfor %}
+                    <button class="btn btn-primary" type="button" data-toggle="collapse"
+                            data-target=".multi-collapse" aria-expanded="false"
+                            aria-controls="multiCollapse-">（反选）
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <section class="content">
+                <div>
+                    <div class="box-body">
+                        <div class="row">
+                            {% for group_name,gv in allgrpdata.items %}
+                                <div class="col">
+                                <div class="collapse multi-collapse"
+                                     id="multiCollapse-{{ gv.systemgroup.id }}">
+
+                                <div class="card card-body">
+                                <div class="box-header">
+                                    <hr class="h-divider">
+                                    <p style="color: #878787">平台：{{ group_name }} ——
+                                        子系统状况</p>
+                                    {% for sys in gv.systems %}
+                                        <div class="col-lg-3 col-md-6">
+                                        {% for k,v in allsysdata.allsys_data.items %}
+                                            {% if k == sys.name %}
+                                                <!-- <div class="panel panel-primary"> -->
+
+                                                {% if v.total_problems == 0 %}
+                                                    <div class="panel panel-primary">
+                                                {% else %}
+                                                    <div class="panel panel-primary arrow_box_red">
+                                                {% endif %}
+
+                                                <div class="panel-heading">
+                                                <div class="row">
+                                                    {% if v.total_problems > 0 %}
+                                                        <div class="col-xs-3">
+                                                            <i class="fa fa-sitemap fa-3x"
+                                                               aria-hidden="true"></i>
+                                                        </div>
+                                                        <div class="col-xs-9 text-right">
+                                                        <div class="panel-title"
+                                                             title="{{ sys.name }} - {{ sys.desc }}">{{ sys.name }}</div>
+                                                        <div class="problem pull-left">
+                                                        <span class="huge">{{ v.total_problems }}</span>
+                                                        个问题
+                                                    {% else %}
+                                                        <div class="col-xs-3">
+                                                            <i class="fa fa-sitemap fa-3x"
+                                                               style="color: #afafaf"
+                                                               aria-hidden="true"></i>
+                                                        </div>
+                                                        <div class="col-xs-9 text-right">
+                                                        <div class="panel-title"
+                                                             style="color: #afafaf"
+                                                             title="{{ sys.name }} - {{ sys.desc }}">{{ sys.name }}</div>
+                                                        <div class="problem pull-left">
+                                                        <span class="huge2">{{ v.total_problems }}</span>
+                                                        <span style="color: #afafaf">个问题</span>
+                                                    {% endif %}
+                                                    </div>
+                                                    </div>
+                                                    </div>
+                                                    </div>
+                                                    <a href="{% url "health_index_services" sys.id %}">
+                                                        <div class="panel-footer">
+                                                            <div class="se">
+                                                                {% if v.high_problems > 0 %}
+                                                                    <span class="fa fa-circle"
+                                                                          aria-hidden="true"
+                                                                          style="color: red"
+                                                                          data-toggle="tooltip"
+                                                                          data-placement="right"
+                                                                          title="严重"></span>
+                                                                    <span class="se-high">{{ v.high_problems }}</span>
+                                                                    &nbsp;&nbsp;
+                                                                {% else %}
+                                                                    <span class="fa fa-circle"
+                                                                          aria-hidden="true"
+                                                                          style="color: grey"
+                                                                          data-toggle="tooltip"
+                                                                          data-placement="right"
+                                                                          title="严重"></span>
+                                                                    <span class="se-high2">0</span>
+                                                                    &nbsp;&nbsp;
+                                                                {% endif %}
+
+                                                                {% if v.med_problems > 0 %}
+
+                                                                    <span class="fa fa-circle"
+                                                                          aria-hidden="true"
+                                                                          style="color: darkorange"
+                                                                          data-toggle="tooltip"
+                                                                          data-placement="right"
+                                                                          title="中等"></span>
+                                                                    <span class="se-medium">{{ v.med_problems }}</span>
+                                                                    &nbsp;&nbsp;
+                                                                {% else %}
+                                                                    <span class="fa fa-circle"
+                                                                          aria-hidden="true"
+                                                                          style="color: grey"
+                                                                          data-toggle="tooltip"
+                                                                          data-placement="right"
+                                                                          title="中等"></span>
+                                                                    <span class="se-high2">{{ v.med_problems }}</span>
+                                                                    &nbsp;&nbsp;
+                                                                {% endif %}
+
+                                                                {% if v.low_problems > 0 %}
+                                                                    <span class="fa fa-circle"
+                                                                          aria-hidden="true"
+                                                                          style="color: #ffcc00"
+                                                                          data-toggle="tooltip"
+                                                                          data-placement="right"
+                                                                          title="一般"></span>
+                                                                    <span class="se-low">{{ v.low_problems }}</span>
+                                                                    &nbsp;&nbsp;
+                                                                {% else %}
+                                                                    <span class="fa fa-circle"
+                                                                          aria-hidden="true"
+                                                                          style="color: grey"
+                                                                          data-toggle="tooltip"
+                                                                          data-placement="right"
+                                                                          title="一般"></span>
+                                                                    <span class="se-high2">{{ v.low_problems }}</span>
+                                                                    &nbsp;&nbsp;
+                                                                {% endif %}
+                                                                <span class="pull-right">
+                                    主机组:{{ v.total_services }}&nbsp;<i
+                                                                        class="fa fa-arrow-circle-right"></i>
+                                </span>
+                                                            </div>
+                                                            <div class="clearfix"></div>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endfor %}
+                                    </div>
+                                    </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            </div>
+                            </div>
+
+                            <div class="pad">
+                                <div id="alert" style="height: 180px;"></div>
+                                <div id="alert2" style="height: 180px;"></div>
+                            </div>
+
+                            <!-- /.box-body -->
+                            <!-- /.box-footer-->
+                            </div>
+                            <!-- Your Page Content Here -->
+            </section>
+        {% endif %}
+    </div>
+    <!-- /.content -->
+
+    <script src="/static/js/echarts.common.min.js"></script>
+    <script src="/static/plugins/daterangepicker/js/vendor.js"></script>
+    <script src="/static/plugins/daterangepicker/js/daterangepicker.js"></script>
+    <script src="/static/plugins/daterangepicker/js/main.js"></script>
+
+    <script src="/static/js/count-problems.js"></script>
+
+<script type="text/javascript">
+  $('.collapse').on('show.bs.collapse', function () {
+    $('.collapse.in').each(function(){
+        $(this).collapse('hide');
+    });
+  });
+</script>
+
+    <script>
+        function mydraw() {
+            host_draw("{% url 'get_systems_problems_data' %}");
+        }
+
+        AlertChart.showLoading();
+        mydraw();
+        setInterval(mydraw, 5000);
+    </script>
+
+    <script>
+        $(".daterangepicker-field").daterangepicker({
+            minDate: '1971-01-01',
+            maxDate: '2038-01-01',
+            minDate: moment().subtract(20, 'years'),
+            maxDate: moment().add(20, 'years'),
+            //startDate: moment().subtract(30, 'days'),
+            startDate: window.Cookies.get('time-rng').split(' -- ')[0],
+            //endDate: moment(),
+            endDate: window.Cookies.get('time-rng').split(' -- ')[1],
+            firstDayOfWeek: 7,
+            forceUpdate: true,
+            ranges: {
+                '今天': [moment().add(8, 'hours'), moment().add(8, 'hours')],
+                //'48小时': [moment().startOf('day').add(8, 'hours'), moment().add(8, 'hours')],
+                '48小时': [moment().subtract('days', 1).add(8, 'hours'), moment().add(8, 'hours')],
+                '72小时': [moment().subtract('days', 2).add(8, 'hours'), moment().add(8, 'hours')],
+                '最近7天': [moment().subtract('days', 6).add(8, 'hours'), moment().add(8, 'hours')],
+                '最近30天': [moment().subtract('days', 29).add(8, 'hours'), moment().add(8, 'hours')]
+            },
+            callback: function (startDate, endDate, period) {
+                //var title = startDate.format('L') + ' – ' + endDate.format('L');
+                var title = startDate.format('YYYY-MM-DD') + ' -- ' + endDate.format('YYYY-MM-DD');
+                $(this).val(title);
+                AlertChart.clear();
+                AlertChart2.clear();
+                AlertChart.showLoading();
+                AlertChart2.showLoading();
+                host_draw("{% url 'get_systems_problems_data' %}");
+            }
+        });
+    </script>
+
+    <!--
+    <script>
+        $(document).ready(function() {
+            $(".daterangepicker-field").daterangepicker({
+                minDate: '1971-01-01',
+                maxDate: '2038-01-01',
+                minDate: moment().subtract(20, 'years'),
+                maxDate: moment().add(20, 'years'),
+                startDate: moment().subtract(10, 'days'),
+                startDate: moment().subtract(30, 'days'),
+                endDate: moment(),
+                firstDayOfWeek: 3,
+                forceUpdate: true,
+                callback: function (startDate, endDate, period) {
+                    var title = startDate.format('L') + ' – ' + endDate.format('L');
+                    var title = startDate.format('YYYY-MM-DD') + ' -- ' + endDate.format('YYYY-MM-DD');
+                    $(this).val(title);
+                    //console.log(startDate.format('L'));
+                    //console.log(endDate.format('L'));
+                    AlertChart.clear();
+                    AlertChart2.clear();
+                    AlertChart.showLoading();
+                    AlertChart2.showLoading();
+                    draw_histo("{% url 'get_systems_problems_data' %}", "{{ sys.name }}");
+                }
+            });
+        });
+    </script>
+-->
+{% endblock %}

@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  alerts:
+    image: devops/alerts:1.2.5
+    environment:
+      SERVER_URL: "http://alerts.keep.com"
+      LISTEN_80_443: "8080"
+      SERVICE_8080_NAME: alerts
+      SERVICE_8080_TAGS: "alerts,http"
+    restart: always
+    volumes:
+      - ./alerts.conf:/var/opt/alerts/main/alerts.conf
+    ports:
+      - "8080"

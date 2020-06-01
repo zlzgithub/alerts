@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block content %}
+    <script>
+        window.onload = init;
+
+        function init() {
+            showhide(1);
+            url = "{% url 'health_overview_systems' %}";
+            var nav = document.getElementById("nav");
+            nav.getElementsByTagName('a')[0].setAttribute("href", url);
+            nav.getElementsByTagName('a')[1].setAttribute("href", url);
+        }
+
+        function showhide(n) {
+            let box = document.getElementById("monitor");
+            box.className = "active";
+            let health_home = Cookies.get("health_home");
+            if (health_home === undefined) {
+                return null;
+            }
+            let box2 = document.getElementById(health_home);
+            box2.className = "active";
+        }
+    </script>
+
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div>
+            <span id="nav">
+                <a href="javascript:void(0);"><i class="fa fa-arrow-circle-left fa-2x"></i></a>
+                &nbsp;&nbsp;
+                <a href="javascript:void(0);">系统:{{ sys.name }}</a>&nbsp;&gt;&nbsp;主机组概况
+            </span>
+            </div>
+        </section>
+        <hr class="h-divider">
+        <!-- Main content -->
+        <section class="content">
+            <!-- <p style="color: #878787">当前系统：{{ sys.name }} —— 近期问题统计</p> -->
+            <div class="pad">
+                <div id="alert" style="height: 160px;"></div>
+                <div id="alert2" style="height: 160px;"></div>
+            </div>
+            <div>
+                <div class="box-body">
+                    {% if sorted_allsvc %}
+                        {% for svc in sorted_allsvc %}
+                            <div class="col-lg-3 col-md-6">
+                            {% for k,v in allsvc_data.items %}
+                                {% if k == svc.name %}
+                                    <!-- <div class="panel panel-primary"> -->
+                                    {% if v.total_problems == 0 %}
+                                        <div class="panel panel-primary">
+                                    {% else %}
+                                        <div class="panel panel-primary arrow_box_red">
+                                    {% endif %}
+                                    <div class="panel-heading">
+                                    <div class="row">
+                                        {% if v.total_problems > 0 %}
+                                            <div class="col-xs-3">
+                                                <i class="fa fa-cogs fa-2x"
+                                                   aria-hidden="true"></i>
+                                            </div>
+                                            <div class="col-xs-9 text-right">
+
+                                            <div class="panel-title"
+                                                 title="{{ svc.name }} - {{ svc.desc }}">{{ svc.name }}</div>
+                                            <div class="problem pull-left">
+                                            <span class="huge">{{ v.total_problems }}</span>
+                                            个问题
+                                        {% else %}
+                                            <div class="col-xs-3">
+                                                <i class="fa fa-cogs fa-2x" style="color: #afafaf"
+                                                   aria-hidden="true"></i>
+                                            </div>
+                                            <div class="col-xs-9 text-right">
+                                            <div class="panel-title" style="color: #afafaf"
+                                                 title="{{ svc.name }} - {{ svc.desc }}">{{ svc.name }}</div>
+                                            <div class="problem pull-left">
+                                            <span class="huge2">{{ v.total_problems }}</span>
+                                            <span style="color: #afafaf">个问题</span>
+                                        {% endif %}
+                                        </div>
+                                        </div>
+                                        </div>
+                                        </div>
+                                        <a href="{% url "health_index_hosts" svc.id %}">
+                                            <div class="panel-footer">
+                                                <div class="se">
+                                                    {% if v.high_problems > 0 %}
+                                                        <span class="fa fa-circle"
+                                                              aria-hidden="true"
+                                                              style="color: red"
+                                                              data-toggle="tooltip"
+                                                              data-placement="right"
+                                                              title="严重"></span>
+                                                        <span class="se-high">{{ v.high_problems }}</span>
+                                                        &nbsp;&nbsp;
+                                                    {% else %}
+                                                        <span class="fa fa-circle"
+                                                              aria-hidden="true"
+                                                              style="color: grey"
+                                                              data-toggle="tooltip"
+                                                              data-placement="right"
+                                                              title="严重"></span>
+                                                        <span class="se-high2">0</span>&nbsp;&nbsp;
+                                                    {% endif %}
+
+                                                    {% if v.med_problems > 0 %}
+
+                                                        <span class="fa fa-circle"
+                                                              aria-hidden="true"
+                                                              style="color: darkorange"
+                                                              data-toggle="tooltip"
+                                                              data-placement="right"
+                                                              title="中等"></span>
+                                                        <span class="se-medium">{{ v.med_problems }}</span>
+                                                        &nbsp;&nbsp;
+                                                    {% else %}
+                                                        <span class="fa fa-circle"
+                                                              aria-hidden="true"
+                                                              style="color: grey"
+                                                              data-toggle="tooltip"
+                                                              data-placement="right"
+                                                              title="中等"></span>
+                                                        <span class="se-high2">{{ v.med_problems }}</span>
+                                                        &nbsp;&nbsp;
+                                                    {% endif %}
+
+                                                    {% if v.low_problems > 0 %}
+                                                        <span class="fa fa-circle"
+                                                              aria-hidden="true"
+                                                              style="color: #ffcc00"
+                                                              data-toggle="tooltip"
+                                                              data-placement="right"
+                                                              title="一般"></span>
+                                                        <span class="se-low">{{ v.low_problems }}</span>
+                                                        &nbsp;&nbsp;
+                                                    {% else %}
+                                                        <span class="fa fa-circle"
+                                                              aria-hidden="true"
+                                                              style="color: grey"
+                                                              data-toggle="tooltip"
+                                                              data-placement="right"
+                                                              title="一般"></span>
+                                                        <span class="se-high2">{{ v.low_problems }}</span>
+                                                        &nbsp;&nbsp;
+                                                    {% endif %}
+                                                    <span class="pull-right">主机:{{ v.total_hosts }}&nbsp;<i
+                                                            class="fa fa-arrow-circle-right"></i></span>
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                                <!-- <span class="pull-left">查看详情</span> -->
+                                                <div class="clearfix"></div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        {% endfor %}
+                    {% endif %}
+                    </div>
+                    <!-- /.box-body -->
+                    <!-- /.box-footer-->
+                    </div>
+                    <!-- Your Page Content Here -->
+        </section>
+        <!-- /.content -->
+    </div>
+
+    <script src="/static/js/echarts.common.min.js"></script>
+    <script src="/static/js/count-problems.js"></script>
+    <script>
+        function mydraw() {
+            host_draw("{% url 'get_system_problems_data2' sys.id %}");
+        }
+
+        AlertChart.showLoading();
+        AlertChart2.showLoading();
+        mydraw();
+        setInterval(mydraw, 5000);
+    </script>
+{% endblock %}

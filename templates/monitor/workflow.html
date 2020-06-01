@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <!-- <link rel="stylesheet" href="/stylesheets/style.css" /> -->
+    <title>系统链路 | Alerts</title>
+    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css">
+    <style>
+        g.type-TK > rect {
+            fill: #cbe4f3;
+        }
+
+        g.type-Node > rect {
+            fill: #d6d6d6;
+        }
+
+        g.type-Linked > rect {
+            fill: #cbe4f3;
+        }
+
+        text {
+            font-weight: 100;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+        }
+
+        .node rect {
+            stroke: #5a5a5a;
+            fill: #fff;
+            stroke-width: 1.5px;
+        }
+
+        .edgePath path {
+            stroke: #cdcdcd;
+            stroke-width: 1.0px;
+        }
+    </style>
+
+    <!-- 悬停样式 -->
+    <style type="text/css">
+        a:link, a:visited {
+            font-size: 12px;
+            color: #00f;
+            text-decoration: none
+        }
+
+        a:hover {
+            color: #f00;
+        }
+
+        div {
+            line-height: 21px;
+        }
+
+        img {
+            border: 1px solid #000;
+            margin: 0 10px
+        }
+    </style>
+    <style>
+        /*div通用样式*/
+        div {
+            background: rgba(8, 8, 17, 0.3);
+            color: #ffffff;
+            overflow: hidden;
+            z-index: 99999;
+            position: fixed;
+            padding: 5px;
+            text-align: left;
+            min-width: 25%;
+            min-height: 60px;
+            border-radius: 6px 6px;
+            font-size: 13px;
+            fill: none;
+        }
+
+        div.left_top {
+            left: 10px;
+            top: 10px;
+        }
+
+        div.right_top {
+            right: 10px;
+            top: 10px;
+        }
+    </style>
+
+    <style type="text/css">
+        #leo {
+            position: absolute;
+            border: 1px solid #474b57;
+            opacity: 0.8;
+            color: #f1f100;
+            background: #575757;
+        }
+
+        pre {
+            font-size: 16px;
+        }
+
+        #syslink-title {
+            color: #232323;
+            border: 1px solid #e6e6e6;
+            border-radius: 8px;
+            font-size: 16px;
+            padding: 2px 5px;
+
+        }
+
+        #total {
+            padding: -6px;
+        }
+
+        #toggle {
+            color: #0072a3;
+            margin-top: -6px;
+        }
+
+        .white-space {
+            display: inline-block;
+            width: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="right_top" id="msg-box">
+    <span id="syslink-title"><b>{{ item.name }}</b></span>
+    <span class="white-space"></span>
+    <a href="javascript:void(0);" onclick="toggle_show(this);">
+    <i id="toggle" class="fa fa-toggle-off fa-2x" aria-hidden="true"></i></a>
+    <span class="white-space"></span>
+    <span id="total"></span>
+    <a href="" target="_blank">
+    <i class="fa fa-window-restore" style="float:right;color:#0072a3" aria-hidden="true"></i></a>
+    <msg id="msg" title="" style="display: block; font-size: 14px; padding: 2px;"></msg>
+</div>
+<svg width=800 height=400 style="margin-top: 128px; margin-left: 15%; overflow:auto;">
+    <g/>
+</svg>
+<script src="/static/plugins/jQuery/js.cookie-2.2.0.min.js"></script>
+<script src="/static/plugins/jQuery/jquery-3.4.1.min.js"></script>
+<script src="/static/js/d3.v3.min.js"></script>
+<script src="/static/js/dagre-d3.min.js"></script>
+<script src="/static/js/floatMsg.js"></script>
+<script>
+    function show_host(host_id) {
+        Cookies.set("system_id", -1);
+        Cookies.set("service_id", -1);
+        window.open('/monitor/health/metric/host/' + host_id + '/problems/');
+    }
+
+    function toggle_show() {
+        if (typeof(Cookies.get("node_id_as_node_label")) === "undefined") {
+            Cookies.set("node_id_as_node_label", "1");
+        }
+        else {
+            Cookies.remove("node_id_as_node_label");
+        }
+        //window.location.reload();
+        let url = "{% url 'get_syslink_data' item_type item_id %}";
+        draw_workflow(url);
+    }
+
+    function reset_toggle_status() {
+        if (typeof (Cookies.get("node_id_as_node_label")) !== "undefined") {
+            $('#toggle').removeClass('fa-toggle-off').addClass('fa-toggle-on');
+        }else{
+            $('#toggle').removeClass('fa-toggle-on').addClass('fa-toggle-off');
+        }
+    }
+
+    function draw_workflow(url) {
+        if (is_drawing){
+            //console.log("is drawing ...");
+            return;
+        }
+        is_drawing = true;
+        $.get(url).done(function (resp) {
+            let data = JSON.parse(resp);
+            let node_data = data.node_data;
+            let node_msg = data.node_msg;
+            let edge_data = data.edge_data;
+            let edge_msg = data.edge_msg;
+            let total_node = data.total_node;
+            //console.log("workflow data: ");
+            //console.log(data);
+            $('#total').html(node_data.length + " / " + total_node);
+            var g = new dagreD3.graphlib.Graph()
+                //.setGraph({})
+                .setGraph({rankdir: "LR"})
+                .setDefaultEdgeLabel(function () {
+                    return {};
+                });
+
+// Here we"re setting nodeclass, which is used by our custom drawNodes function
+// below.
+            let node_ids = [];
+            let show_id = true;
+            if (typeof(Cookies.get("node_id_as_node_label")) !== "undefined") {
+                //console.log("show id");
+            }else{
+                //console.log("show label");
+                show_id = false;
+            }
+            for (node in node_data) {
+                //g.setNode(node, {label: node_data[node].label, class: node_data[node].class});
+                g.setNode(node_data[node].ip, {
+                    //label: node_data[node].label,
+                    label: show_id ? "#" + node_data[node].id : node_data[node].label,
+                    class: node_data[node].class,
+                    //style: "stroke: red;fill:none;",
+                });
+                let id = {
+                    "id": node_data[node].id,
+                    "ip": node_data[node].ip,
+                    "hostname": node_data[node].hostname
+                };
+                node_ids.push(id);
+            }
+
+            g.nodes().forEach(function (v) {
+                var node = g.node(v);
+                // Round the corners of the nodes
+                node.rx = node.ry = 10;
+            });
+
+// Set up edges, no special attributes.
+            let path_ids = [];
+            for (edge in edge_data) {
+                //g.setEdge(edge_data[edge][0], edge_data[edge][1], {label: edge_data[edge][2]});
+                let path_id = edge_data[edge].from + "->" + edge_data[edge].to;
+                g.setEdge(edge_data[edge].from, edge_data[edge].to, {
+                    label: edge_msg[path_id].status,
+                    //style: "stroke: blue;fill:none;",
+                    //arrowheadStyle: "stroke: #666; fill:#666;", //箭头
+                    //arrowhead: 'undirected'
+                });
+                let id = [edge_data[edge].from, edge_data[edge].to].join('->');
+                path_ids.push(id);
+            }
+
+// Create the renderer
+            var render = new dagreD3.render();
+
+// Set up an SVG group so that we can translate the final graph.
+            var svg = d3.select("svg"),
+                svgGroup = svg.append("g");
+
+// Run the renderer. This is what draws the final graph.
+            render(d3.select("svg g"), g);
+
+// Center the graph
+            //var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
+            var xCenterOffset = 0;
+            var yCenterOffset = 0;
+            //svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
+            svgGroup.attr("transform", "translate(" + xCenterOffset + "," + yCenterOffset + ")");
+            svg.attr("height", g.graph().height + 128);
+            svg.attr("width", g.graph().width + 128);
+            //
+            bind_click(node_ids, path_ids, node_msg, edge_msg);
+            color_node_border(node_ids);
+            set_path_color();
+            reset_toggle_status();
+            is_drawing = false;
+        });
+    }
+</script>
+<script>
+    String.prototype.replaceAll = function replaceAll(str1, str2) {
+        return this.replace(new RegExp(str1, 'gm'), str2);
+    };
+
+    let node_stroke = "#cb9e1a";
+    function color_node_border(node_ids, cur_path_id) {
+        if (typeof(cur_path_id) === "undefined"){
+            return null;
+        }
+        let id_pair = cur_path_id.split('->');
+        $('.node rect').css("stroke", "#606060");
+        $('.node rect').css("stroke-width", "1.5px");
+        for (n in node_ids) {
+            if (node_ids[n].ip === id_pair[0]) {
+                //console.log("color node_from");
+                $('.node:eq(' + n + ') rect').css("stroke", node_stroke);
+                $('.node:eq(' + n + ') rect').css("stroke-width", "3px");
+            }
+            if (node_ids[n].ip === id_pair[1]) {
+                //console.log("color node_to");
+                $('.node:eq(' + n + ') rect').css("stroke", node_stroke);
+                $('.node:eq(' + n + ') rect').css("stroke-width", "3px");
+            }
+        }
+    }
+
+    function refresh_float_msg(e, msg) {
+        //var ndiv = "<div id='leo' style='left: -999px;'><pre>" + msg + "</pre></div>";
+        var ndiv = "<div id='leo' style='left: -999px;'>" + msg + "</div>";
+        $("body").append(ndiv);
+        //console.log("#leo appended");
+        $("#leo").css({
+            "top": (e.pageY + y) + "px",
+            "left": (e.pageX + x) + "px",
+            "width": "auto"
+        }).show(2000);
+
+        $("#leo").css({
+            "top": (e.pageY + y) + "px",
+            "left": (e.pageX + x) + "px",
+            "width": "auto"
+        }).show(2000);
+    }
+
+    function show_tips() {
+        $('#msg').html(
+            "提示：<br>1.移动鼠标至某节点或连线以显示某些提示信息" +
+            "<br>2.节点之间连线取决于节点上报的数据，无连线节点呈灰色" +
+            "<br>3.节点数<20时总是显示所有节点，否则只显示有连接的，且" +
+            "<br>如果有连接的节点不足10个会补齐至20个以显示");
+    }
+
+    function refresh_edge_notify(path_ids, node_msg, edge_msg, ind) {
+        let cur_path_id = "";
+        if (typeof(ind) !== "undefined") {
+            //console.log("refresh_edge_notify with ind ...");
+            cur_path_id = ind;
+        }else{
+            //console.log("without ind ...");
+            show_tips();
+            return null;
+        }
+        //console.log("cur_path_id is:");
+        //console.log(cur_path_id);
+        const toTimestr = time_stamp => {
+            const time = new Date(time_stamp * 1000);
+            const Y = time.getFullYear();
+            const M = (time.getMonth() + 1).toString().padStart(2, '0');
+            const D = time.getDate().toString().padStart(2, '0');
+            const h = time.getHours().toString().padStart(2, '0');
+            const m = time.getMinutes().toString().padStart(2, '0');
+            const s = time.getSeconds().toString().padStart(2, '0');
+            return `${Y}-${M}-${D} ${h}:${m}:${s}`
+        };
+        let ts = edge_msg[cur_path_id].timestamp;
+        let ts2 = toTimestr(ts);
+        let stat = edge_msg[cur_path_id].status;
+        let color_stat = "#dddddd";
+        let color_ts = "#888888";
+        color_stat = "ok" === stat ? "#00ff00": (stat.startsWith("fail") ? "#ff0000": color_stat);
+        if (typeof(cur_path_id) !== "undefined" && typeof(edge_msg[cur_path_id]) !== "undefined") {
+            let cur_path_msg = "标题：" + edge_msg[cur_path_id].title +
+                '\n状态：' + '<b style="color:' + color_stat + '">' + stat + '</b>' +
+                ' <font color="' + color_ts + '">@' + ts2 + '</font>' +
+                '\n详情：[' + edge_msg[cur_path_id].from + " #" + node_msg[edge_msg[cur_path_id].from].id +
+                " -> " + edge_msg[cur_path_id].to + " #" + node_msg[edge_msg[cur_path_id].to].id + "]\n" +
+                edge_msg[cur_path_id].result;
+            //$('#msg').html('<pre>' + cur_path_msg + '</pre>');
+            let cur_path_msg2 = cur_path_msg.replaceAll('\n', '<br>');
+            $('#msg').html(cur_path_msg2);
+            return cur_path_msg2.replace(/<i.*<\/i>/g, '');
+        }
+        return null;
+    }
+
+    function bind_click(node_ids, path_ids, node_msg, edge_msg) {
+        x = 15;
+        y = 0;
+        $(".edgePath").unbind('mouseenter').unbind('mouseleave');
+        $(".edgePath").hover(function (e) {
+            //console.log("hover 1");
+            $(".edgePath path").css("stroke-width", "1.0px");
+            let ind = $(".edgePath").index(this);       //ok   jquery方式获取当前元素的序号
+            //console.log("edgePath this.index: " + ind);
+            $('.edgePath:eq(' + ind + ') path:eq(0)').css("stroke-width", "2.5px");
+            let cur_path_id = path_ids[ind];
+            let msg = refresh_edge_notify(path_ids, node_msg, edge_msg, cur_path_id);
+            refresh_float_msg(e, msg);
+            color_node_border(node_ids, cur_path_id);
+        }, function () {
+            $('div[id="leo"]').remove();
+        });
+
+        $(".node").unbind('dblclick').bind('dblclick', function(){
+            let ind = $(".node").index(this);
+            show_host(node_ids[ind].id);
+        });
+
+        $(".node").unbind('mouseenter').unbind('mouseleave');
+        $(".node").hover(function (e) {
+            this.style.cursor = "hand";
+            //console.log("hover 2");
+            let ind = $(".node").index(this);
+            //console.log("node this.index: " + ind);
+            let cur_node_msg = node_ids[ind].hostname +
+                '<a href="javascript:void(0);" onclick="show_host(' + node_ids[ind].id +
+                ');"><i class="fa fa-desktop" style="float:right;color:#0072a3" aria-hidden="true"></i></a>' +
+                '<br>@' + node_ids[ind].ip + ' #' + node_ids[ind].id;
+            $('#msg').html(cur_node_msg);
+
+            //css
+            $(".edgePath path").css("stroke-width", "1.0px");
+            $('.node rect').css("stroke", "#606060");
+            $('.node rect').css("stroke-width", "1.5px");
+            $('.node:eq(' + ind + ') rect').css("stroke", node_stroke);
+            $('.node:eq(' + ind + ') rect').css("stroke-width", "3px");
+
+            //float msg
+            let otitle = cur_node_msg.replace(/<i.*<\/i>/g, '');
+            var ndiv = "<div id='leo' style='left: -999px;'>" + otitle + "</div>";
+            $("body").append(ndiv);
+
+            $("#leo").css({
+                "top": (e.pageY + y) + "px",
+                "left": (e.pageX + x) + "px",
+                "width": "auto"
+            }).show(2000);
+
+            $("#leo").css({
+                "top": (e.pageY + y) + "px",
+                "left": (e.pageX + x) + "px",
+                "width": "auto"
+            }).show(1000);
+        }, function () {
+            //$("#leo").remove();
+            $('div[id="leo"]').remove();
+        });
+
+        //refresh_edge_notify(path_ids, node_msg, edge_msg);
+        //setTimeout(function() {refresh_edge_notify(path_ids, node_msg, edge_msg);}, 100);
+    }
+
+    function set_path_color() {
+        try {
+            let n_labels = $('g.edgeLabels').children().length;
+            for (let i = 0; i < n_labels; i++) {
+                let lab_prefix = $('g.edgeLabels g.edgeLabel:eq(' + i + ') text tspan:eq(0)').text();
+                if (lab_prefix.toLowerCase().startsWith("fail")) {
+                    color_path(i, "#ff0000");
+                }
+                else if (lab_prefix.toLowerCase().startsWith("ok")) {
+                    color_path(i, "#00d202");
+                }
+            }
+        } catch (err) {
+            setTimeout(set_path_color, 1000);
+        }
+    }
+
+    function color_path(e, color) {
+        try {
+            if (typeof ($('g.edgePath')[e]) !== "undefined") {
+                $('g.edgePath:eq(' + e + ') path:eq(0)').css("stroke", color);
+                //$('g.edgePath:eq(' + e + ') path:eq(1)').css("stroke", color);  //箭头border
+            }
+        } catch (err) {
+            //console.log("color_path err");
+            //set_path_color();
+            throw "color_path_err"
+        }
+    }
+
+    $('#syslink-title').click(function () {
+        show_tips();
+    });
+
+    let is_drawing = false;
+    $(document).ready(function () {
+        $('#syslink-title').trigger('click');
+        let url = "{% url 'get_syslink_data' item_type item_id %}";
+        draw_workflow(url);
+    });
+    let url = "{% url 'get_syslink_data' item_type item_id %}";
+    setInterval(function(){draw_workflow(url);}, 15000);
+</script>
+</body>
+
+</html>

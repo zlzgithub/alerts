@@ -1,0 +1,28 @@
+# 内部nginx 80、443
+docker run -d --name test \
+    -e LISTEN_80_443=443 \
+    -v /opt/letsencrypt:/opt/letsencrypt \                          # 挂载ssl证书给容器内nginx
+    -v ./alerts.conf:/var/opt/alerts/main/alerts.conf \       # 挂载项目配置文件
+    -p 80:80 \
+    -p 443:443  \
+    devops/alerts:1.2.5
+
+---
+
+# 内部nginx 80
+docker run -d --name test \
+    -e LISTEN_80_443=80 \
+    -v ./alerts.conf:/var/opt/alerts/main/alerts.conf \
+    -p 80:80 \
+    -e SERVER_URL=http://abc123.com  \                              # 指定访问地址
+    devops/alerts:1.2.5
+
+---
+
+# 外部nginx 80 -> 8080
+docker run -d --name test \
+    -e LISTEN_80_443=8080 \
+    -v ./alerts.conf:/var/opt/alerts/main/alerts.conf \
+    -e SERVER_URL=http://abc123.com \
+    devops/alerts:1.2.5
+

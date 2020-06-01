@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    {% include 'link_css.html' %}
+    {% include 'head_script.html' %}
+
+
+    <script src="/static/layer/layer.js"></script>
+    <script src="/static/js/jquery.bootstrap-duallistbox.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap-duallistbox.css">
+
+</head>
+<body>
+<div class="content-wrapper">
+
+
+    <section class="content">
+
+<div id="dialog">
+
+
+        <div class="box">
+      <form action="{% url 'asset_edit' ids %}" method="post">
+        {% csrf_token %}
+        {{ af.as_p }}
+        <input type="submit" class="btn btn-primary" style="width: 60pt" value="保存">&nbsp;&nbsp;
+          <br>
+      </form>
+</div>
+</div>
+
+    </section>
+
+  </div>
+{#回传参数至父层#}
+<script type="text/javascript">
+        var index = parent.layer.getFrameIndex(window.name);
+        var success = {{ status }};
+        if ( success == '1' ) {
+            parent.$("#handle_status").val('1');
+              parent.layer.close(index);
+        } else if( success == '2' ) {
+            parent.$("#handle_status").val('2');
+            parent.layer.close(index);
+        }
+</script>
+<script>
+    var demo1 = $('select[name="instanceList"]').bootstrapDualListbox({
+          nonSelectedListLabel: '可选实例',
+          selectedListLabel: '当前主机-已选实例',
+          preserveSelectionOnMove: 'moved',
+          moveOnSelect: false
+    });
+</script>
+</body>
+</html>

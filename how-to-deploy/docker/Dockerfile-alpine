@@ -1,0 +1,49 @@
+FROM python:2.7-alpine
+
+ARG SERVER_URL
+ARG LISTEN_80_443
+
+ENV APP_HOME=/var/opt/alerts \
+    SERVER_URL=${SERVER_URL:-"http://alerts.keep.com/"} \
+    LISTEN_80_443=${LISTEN_80_443:-no}
+
+WORKDIR $APP_HOME
+VOLUME data
+COPY ./conf.d   .
+COPY ./main     main
+
+RUN mkdir -p $APP_HOME/logs && \
+    mkdir -p $APP_HOME/pid && \
+    mkdir -p $APP_HOME/data && \
+    mkdir -p $APP_HOME/config/celery && \
+    mkdir -p $APP_HOME/config/logs && \
+    mv /etc/apk/repositories /etc/apk/repositories.bak && \
+    echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.11/main/" > /etc/apk/repositories && \
+    echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.11/community/" >> /etc/apk/repositories && \
+    apk add gcc g++ make linux-headers libffi-dev --no-cache && \
+    apk add openldap-dev --no-cache && \
+    apk add libmagic --no-cache && \
+    apk add mysql-dev --no-cache && \
+    apk add nginx --no-cache && \
+    pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip install -U pip && \
+    pip install supervisor==4.2.0 && \
+    /usr/local/bin/echo_supervisord_conf > /etc/supervisord.conf && \
+    mkdir /etc/supervisord.d && \
+    echo "[include]" >> /etc/supervisord.conf && \
+    echo "files = supervisord.d/*.conf" >> /etc/supervisord.conf && \
+    cd $APP_HOME/main && \
+    pip install -r requirements.txt && \
+    cd $APP_HOME/main/vendor/django-celery-results-master && \
+    python setup.py build && \
+    python setup.py install && \
+    cp $APP_HOME/nginx/*.conf /etc/nginx/conf.d/ && \
+    cp $APP_HOME/supervisor/*.conf /etc/supervisord.d/ && \
+    mkdir /run/nginx && \
+    chmod +x $APP_HOME/start.sh && \
+    find /usr/local/lib/python2.7 -name '*.pyc' -delete && \
+    find $APP_HOME/ -name '*.pyc' -delete
+
+
+EXPOSE 8080
+CMD ["./start.sh"]

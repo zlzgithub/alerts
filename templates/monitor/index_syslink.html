@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block self_head_css_js %}
+    <script src="/static/js/echarts.min.js"></script>
+    <script src="/static/layer/layer.js"></script>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="/static/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+    <link rel="stylesheet" href="/static/ztree/css/demo.css" type="text/css">
+    <script type="text/javascript" src="/static/ztree/js/jquery.ztree.core.js"></script>
+    <script src="/static/plugins/jQuery/js.cookie-2.2.0.min.js"></script>
+    <script>
+        if (screen.width === 1920){
+            {% if "on" == request.COOKIES.sidebar_status %}
+                document.write('<link href="/static/css/syslink/w1920_100.css" rel="stylesheet" type="text/css" />');
+            {% else %}
+                document.write('<link href="/static/css/syslink/w1920_100_b.css" rel="stylesheet" type="text/css" />');
+            {% endif %}
+        }
+        else if (screen.width === 1536){
+            {% if "on" == request.COOKIES.sidebar_status %}
+                document.write('<link href="/static/css/syslink/w1920_125.css" rel="stylesheet" type="text/css" />');
+            {% else %}
+                document.write('<link href="/static/css/syslink/w1920_125_b.css" rel="stylesheet" type="text/css" />');
+            {% endif %}
+        }
+        else if (screen.width === 1280){
+            {% if "on" == request.COOKIES.sidebar_status %}
+                document.write('<link href="/static/css/syslink/w1920_150.css" rel="stylesheet" type="text/css" />');
+            {% else %}
+                document.write('<link href="/static/css/syslink/w1920_150_b.css" rel="stylesheet" type="text/css" />');
+            {% endif %}
+        }
+        else {
+        //else if (screen.width === 1366){
+            {% if "on" == request.COOKIES.sidebar_status %}
+                document.write('<link href="/static/css/syslink/w1366_100.css" rel="stylesheet" type="text/css" />');
+            {% else %}
+                document.write('<link href="/static/css/syslink/w1366_100_b.css" rel="stylesheet" type="text/css" />');
+            {% endif %}
+        }
+
+    </script>
+{% endblock %}
+{% block content %}
+    <script>
+        window.onload = init;
+
+        function init() {
+            showhide(1);
+        }
+
+        function showhide(n) {
+            let box = document.getElementById("monitor");
+            box.className = "active";
+            let box2 = document.getElementById("syslink");
+            box2.className = "active";
+        }
+    </script>
+    <SCRIPT type="text/javascript">
+        var setting = {
+            async: {
+                enable: true,
+                autoParam: ["name"],
+                type: "post",
+                url: "{% url 'syslink_tree' %}"
+            },
+            // callback: {
+            //     onClick: zTreeOnClick
+            // },
+
+            view: {
+                dblClickExpand: false,
+                showLine: true,
+                // fontCss:{'color':'black','font-weight':'bold'},
+                selectedMulti: false
+            }
+
+        };
+
+        // function zTreeOnClick(event, treeId, treeNode) {
+        //     alert(treeNode.tId + ", " + treeNode.name);
+        // }
+
+        function bind_a() {
+            // console.log("bind a ...");
+            $('a[target="myframe"]').unbind('click').bind('click', function () {
+                let last_syslink_id = this.id;
+                Cookies.set("last_syslink_id", last_syslink_id);
+                // console.log(last_syslink_id);
+            });
+        }
+
+        function init_tree(){
+            $.fn.zTree.init($("#treeDemo"), setting);
+            setTimeout(click_a, 500);
+            setTimeout(bind_a, 500);
+        }
+
+        $(document).ready(function () {
+            init_tree();
+        });
+
+        function click_a(){
+            try{
+                let last_syslink_id = Cookies.get("last_syslink_id");
+                // console.log("id is: " + last_syslink_id);
+                if (typeof(last_syslink_id) !== "undefined") {
+                    $('a[id="' + last_syslink_id + '"]')[0].click();
+                }
+                else {
+                    $('span[id="treeDemo_1_span"]')[0].click();
+                }
+            }catch (err){
+                alert("自动打开节点失败 ...");
+            }
+        }
+    </SCRIPT>
+
+    <div class="content-wrapper">
+        <section class="content-header">
+            <h4 style="color: #0091bf;">系统链路</h4>
+        </section>
+        <section class="content">
+            <div class="zTreeDemoBackground left">
+                <ul id="treeDemo" class="ztree"></ul>
+            </div>
+            <div class="left">
+                <iframe name="myframe" frameborder="0"></iframe>
+            </div>
+        </section>
+    </div>
+{% endblock %}

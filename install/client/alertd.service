@@ -1,0 +1,15 @@
+[Unit]
+Description=Alerts Agent Script
+After=network.target
+
+[Service]
+WorkingDirectory=/var/opt/alerts/client/
+ExecStart=/var/opt/alerts/client/venv/bin/python alerts_agent.py
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+

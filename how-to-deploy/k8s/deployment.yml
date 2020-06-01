@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alerts
+  namespace: test
+  labels:
+    k8s-app: alerts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: alerts
+  template:
+    metadata:
+      labels:
+        k8s-app: alerts
+    spec:
+      containers:
+      - name: alerts
+        image: devops/alerts:1.2.5
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 1
+            memory: 1000Mi
+          requests:
+            cpu: 0.5 
+            memory: 500Mi
+        env:
+          - name: SERVER_URL
+            value: "http://alerts.keep.com/"
+          - name: LISTEN_80_443
+            value: "8080"
+        ports:
+        - containerPort: 8080
+          name: web
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /var/opt/alerts/main/alerts.conf
+          subPath: alerts.conf
+
+      volumes:
+      - name: config
+        configMap:
+          name: alerts-conf

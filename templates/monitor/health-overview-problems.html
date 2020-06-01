@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block self_head_css_js %}
+    <script src="/static/layer/layer.js"></script>
+    <script src="/static/js/base.js"></script>
+    <link rel="stylesheet" href="/static/css/dataTables.bootstrap.min.css">
+{% endblock %}
+{% block content %}
+    <script>
+        window.onload = init;
+
+        function init() {
+            showhide(1);
+            Cookies.set("system_id", -1);
+            Cookies.set("service_id", -1);
+            Cookies.set("health_home", "health4");
+        }
+
+        function showhide(n) {
+            let box = document.getElementById("monitor");
+            box.className = "active";
+            let box2 = document.getElementById("health4");
+            box2.className = "active";
+        }
+    </script>
+
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div>
+                <span>
+                    <a href="{% url 'health_overview_problems' %}"><i class="fa fa-home fa-2x"></i></a>
+                    &nbsp;&nbsp;<b style="color: #337AB7">{{ plat_name }}</b> 问题列表&nbsp;&nbsp;&nbsp;&nbsp;
+                    <span style="color: #36b425">时间: [{{ cur_time_rng|join:", " }})&nbsp;&nbsp;</span>
+                </span>
+            </div>
+        </section>
+
+        <hr class="h-divider">
+
+        {% include 'monitor/problem-table.html' %}
+{% endblock %}

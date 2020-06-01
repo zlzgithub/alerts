@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block self_head_css_js %}
+    <script src="/static/layer/layer.js"></script>
+    <script src="/static/js/base.js"></script>
+    <!-- <link rel="stylesheet"
+          href="/static/AdminLTE/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+          -->
+    <link rel="stylesheet"
+          href="/static/css/dataTables.bootstrap.min.css">
+{% endblock %}
+{% block content %}
+    <script>
+        window.onload = init;
+
+        function init() {
+            showhide();
+            const system_id = Cookies.get('system_id');
+            const service_id = Cookies.get('service_id');
+            //console.log("system_id: " + system_id);
+            //console.log("service_id: " + service_id);
+            let health_home = Cookies.get("health_home");
+            if (health_home === undefined){
+                health_home = "health_metric";
+            }
+            //console.log("health_home: " + health_home);
+            if (health_home === "health_metric") {
+                if (system_id !== undefined && "-1" !== system_id) {
+                    nav = document.getElementById("nav");
+                    url = "{% url 'metric_overview_systems' %}";
+                    url2 = "{% url 'metric_index_hosts' 12345 %}";
+                    nav.getElementsByTagName('a')[1].setAttribute('href', url);
+
+                    url2 = url2.replace('12345', system_id);
+                    nav.getElementsByTagName('a')[0].setAttribute('href', url2);
+                    nav.getElementsByTagName('a')[2].setAttribute('href', url2);
+                    document.getElementById("nav").style.display = "none";
+                    nav.style.display = "block";
+                } else {
+                    nav = document.getElementById("nav-1");
+                    url = "{% url 'metric_overview_systems' %}";
+                    url2 = "{% url 'metric_index_hosts' 12345 %}";
+                    nav.getElementsByTagName('a')[1].setAttribute('href', url);
+                    nav.getElementsByTagName('a')[0].setAttribute('href', url);
+                    document.getElementById("nav-1").style.display = "none";
+                    nav.style.display = "block";
+                }
+            } else if (health_home === "health2_metric") {
+                nav = document.getElementById("nav2");
+                url = "{% url 'metric_overview_services' %}";
+                url2 = "{% url 'metric_service_index_hosts' 12345 %}";
+                url2 = url2.replace('12345', service_id);
+                nav.getElementsByTagName('a')[0].setAttribute('href', url2);
+                nav.getElementsByTagName('a')[1].setAttribute('href', url);
+                nav.getElementsByTagName('a')[2].setAttribute('href', url2);
+                document.getElementById("nav").style.display = "none";
+                nav.style.display = "block";
+            }
+        }
+
+        function showhide() {
+            let box = document.getElementById("monitor");
+            box.className = "active";
+            let health_home = Cookies.get("health_home");
+            if (health_home === undefined) {
+                return null;
+            }
+            let box2 = document.getElementById(health_home);
+            box2.className = "active";
+        }
+    </script>
+
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div>
+                <span id="nav" style="display: none;">
+                    <a href="javascript:void(0);"><i class="fa fa-arrow-circle-left fa-2x"></i></a>
+                    &nbsp;&nbsp;
+                    <a href="javascript:void(0);">系统:{{ sys.name }}</a>&nbsp;&gt;&nbsp;
+                    <a href="javascript:void(0);">主机:{{ host.hostname }}</a>&nbsp;&gt;&nbsp;问题列表
+                    <span style="color: grey;">&nbsp;&nbsp;&nbsp;&nbsp;时间: [{{ cur_time_rng|join:", " }})</span>
+                </span>
+                <span id="nav-1" style="display: none;">
+                    <a href="javascript:void(0);"><i class="fa fa-arrow-circle-left fa-2x"></i></a>
+                    &nbsp;&nbsp;
+                    <a href="javascript:void(0);">系统</a>&nbsp;&gt;&nbsp;
+                    主机:{{ host.hostname }}&nbsp;&gt;&nbsp;问题列表
+                    <span style="color: grey;">&nbsp;&nbsp;&nbsp;&nbsp;时间: [{{ cur_time_rng|join:", " }})</span>
+                </span>
+                <span id="nav2" style="display: none;">
+                    <a href="javascript:void(0);"><i class="fa fa-arrow-circle-left fa-2x"></i></a>
+                    &nbsp;&nbsp;
+                    <a href="javascript:void(0);">分组:{{ svc.name }}</a>&nbsp;&gt;&nbsp;
+                    <a href="javascript:void(0);">主机:{{ host.hostname }}</a>&nbsp;&gt;&nbsp;问题列表
+                    <span style="color: grey;">&nbsp;&nbsp;&nbsp;&nbsp;时间: [{{ cur_time_rng|join:", " }})</span>
+                </span>
+                <span id="nav3" style="display: none;">
+                    <a href="javascript:void(0);"><i class="fa fa-arrow-circle-left fa-2x"></i></a>
+                    &nbsp;&nbsp;
+                    <a href="javascript:void(0);">主机:{{ host.hostname }}</a>&nbsp;&gt;&nbsp;问题列表
+                    <span style="color: grey;">&nbsp;&nbsp;&nbsp;&nbsp;时间: [{{ cur_time_rng|join:", " }})</span>
+                </span>
+            </div>
+        </section>
+
+        <hr class="h-divider">
+        <!--
+            <div class="pad">
+                <div id="alert" style="height: 160px;"></div>
+                <div id="alert2" style="height: 160px;"></div>
+            </div> -->
+
+	    <!--
+            <div class="pad" style="margin: 0 0 120px 0">
+                <div class="col-md-9">
+                    <div id="alert" style="margin: -40px 0 -35px -50px; height: 220px;"></div>
+		</div> -->
+            <!-- <div class="pad" style="margin: 5px 0 0 0"> -->
+            <div class="pad">
+	        <div class="col-md-8">
+	            <div id="alert" style="margin: -14px 0 0 0; height: 200px;"></div>
+                </div>
+
+                <div class="col-md-4">
+                    <span style="color: #ff6915;">
+                        <i class="fa fa-bell-o" aria-hidden="true"></i>
+                        最近的未确认问题：
+                    </span>
+                    <div class="row" style="max-height: 100px; overflow-y: auto; margin-left: -40px;">
+                        <span id="latest5-host-names">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        
+        <section class="content">
+            <div class="pad" id="p-charts">
+                <div class="col-md-4">
+                    <div id="alert3" style="height: 180px;"></div>
+                </div>
+                <div class="col-md-4">
+                    <div id="alert2" style="height: 180px;"></div>
+                </div>
+                <div class="col-md-4">
+                    <div id="alert4" style="height: 180px;"></div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="h-divider">
+
+        {% include 'monitor/problem-table.html' %}
+
+    <script src="/static/js/echarts.common.min.js"></script>
+    <script src="/static/js/count-problems.js"></script>
+    <script>
+        function mydraw() {
+            draw_histo("{% url 'get_host_problems_data' host.id %}");
+            draw_cur("{% url 'get_host_problems_data_cur' host.id %}");
+            draw_his("{% url 'get_host_problems_data_his' host.id %}");
+            gen_tags("{% url 'get_metric_severity_pie_data' host.id %}");
+            latest5_host_info("{% url 'get_latest5_hosts' %}?hostid=" + {{ host.id }});
+        }
+
+        AlertChart.showLoading();
+        mydraw();
+        setInterval(mydraw, 5000);
+    </script>
+
+{% endblock %}
